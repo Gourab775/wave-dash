@@ -1816,15 +1816,47 @@
               return [];
           }
 
+          // ---- Neon DB (scores + last session). localStorage stays as offline cache. ----
+          function currentRunMeta() {
+              var meta = { mode: null, wave_size: null, theme_color: null };
+              try { if (typeof currentMode !== 'undefined' && currentMode) meta.mode = String(currentMode).slice(0, 16); } catch (e) {}
+              try { if (typeof currentWaveSize !== 'undefined' && currentWaveSize) meta.wave_size = String(currentWaveSize).slice(0, 16); } catch (e) {}
+              try { if (typeof themeColor !== 'undefined' && themeColor) meta.theme_color = String(themeColor).slice(0, 16); } catch (e) {}
+              return meta;
+          }
+
+          function dbPostScore(value) {
+              try {
+                  var meta = currentRunMeta();
+                  fetch('/api/scores', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ player_name: PLAYER_NAME, score: Math.floor(value), mode: meta.mode || 'medium', wave_size: meta.wave_size || 'normal' })
+                  }).then(function() {
+                      try {
+                          var scores = loadPastScores();
+                          var best = scores.length ? Math.max.apply(null, scores) : Math.floor(value);
+                          var m2 = currentRunMeta();
+                          fetch('/api/state', {
+                              method: 'PUT',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ player_name: PLAYER_NAME, last_score: Math.floor(value), best_score: best, mode: m2.mode, wave_size: m2.wave_size, theme_color: m2.theme_color })
+                          }).catch(function() {});
+                      } catch (e) {}
+                  }).catch(function() {});
+              } catch (e) {}
+          }
+
           function savePastScore(value) {
               if (typeof value !== 'number' || !isFinite(value) || value <= 0) return;
               var scores = loadPastScores();
               scores.unshift(Math.floor(value));
               scores = scores.slice(0, 20);
               try { localStorage.setItem(SCORES_KEY, JSON.stringify(scores)); } catch (e) {}
+              dbPostScore(value);
           }
 
-          // Save every finished run (on death) into the localStorage cache.
+          // Save every finished run (on death) into localStorage + Neon DB.
           if (typeof window.die === 'function') {
               var originalDie = window.die;
               window.die = function() {
@@ -1834,6 +1866,27 @@
                   return originalDie.apply(this, arguments);
               };
           }
+
+          // Restore last session (mode / wave size / theme) from Neon DB once per load.
+          try {
+              fetch('/api/state?player=' + encodeURIComponent(PLAYER_NAME)).then(function(r) {
+                  return r.ok ? r.json() : null;
+              }).then(function(data) {
+                  try {
+                      var st = data && data.state ? data.state : null;
+                      if (!st) return;
+                      if (st.mode && typeof setMode === 'function' && typeof isPlaying !== 'undefined' && !isPlaying) {
+                          try { setMode(st.mode); } catch (e) {}
+                      }
+                      if (st.wave_size && typeof setWaveSize === 'function' && typeof isPlaying !== 'undefined' && !isPlaying) {
+                          try { setWaveSize(st.wave_size); } catch (e) {}
+                      }
+                      if (st.theme_color && typeof themeColor !== 'undefined') {
+                          try { themeColor = st.theme_color; } catch (e) {}
+                      }
+                  } catch (e) {}
+              }).catch(function() {});
+          } catch (e) {}
 
           var PLAYER_NAMES = ['Nova','Blaze','Vortex','Pixel','Echo','Drift','Onyx','Zephyr','Kai','Rogue','Frost','Jett','Mira','Orion','Pulse','Raven','Slate','Turbo','Umbra','Volt','Wisp','Xeno','Yara','Zeke','Ash','Bolt','Cipher','Dash','Ember','Flint','Ghost','Halo','Ion','Jinx','Koda','Luna','Nyx','Opal','Pax','Quinn'];
 
@@ -1857,18 +1910,9 @@
               return DUMMY_BOARD;
           }
 
-          // Leaderboard (changelog modal): demo data competing with your own past scores.
-          function renderChangelogLeaderboard() {
-              var list = document.getElementById('changelog-leaderboard-list');
-              if (!list) return;
+          // Leaderboard: Neon DB top-100, fallback to demo + local cache offline.
+          function paintLeaderboard(list, entries) {
               list.innerHTML = '';
-              var entries = buildDummyBoard().map(function(e) {
-                  return { name: e.name, score: e.score, you: false };
-              });
-              var pastScores = loadPastScores();
-              if (pastScores.length > 0) {
-                  entries.push({ name: PLAYER_NAME, score: Math.max.apply(null, pastScores), you: true });
-              }
               entries.sort(function(a, b) { return b.score - a.score; });
               entries.forEach(function(entry, index) {
                   var row = document.createElement('div');
@@ -1889,11 +1933,37 @@
               }
           }
 
-          function renderPastScores() {
-              var list = document.getElementById('past-scores-list');
+          function fallbackBoard() {
+              var entries = buildDummyBoard().map(function(e) {
+                  return { name: e.name, score: e.score, you: false };
+              });
+              var pastScores = loadPastScores();
+              if (pastScores.length > 0) {
+                  entries.push({ name: PLAYER_NAME, score: Math.max.apply(null, pastScores), you: true });
+              }
+              return entries;
+          }
+
+          function renderChangelogLeaderboard() {
+              var list = document.getElementById('changelog-leaderboard-list');
               if (!list) return;
+              paintLeaderboard(list, fallbackBoard());
+              try {
+                  fetch('/api/scores?scope=top&limit=100').then(function(r) {
+                      return r.ok ? r.json() : null;
+                  }).then(function(data) {
+                      var rows = data && data.leaderboard ? data.leaderboard : null;
+                      if (!rows || !rows.length) return;
+                      var entries = rows.map(function(e) {
+                          return { name: e.name, score: e.score, you: e.name === PLAYER_NAME };
+                      });
+                      paintLeaderboard(list, entries);
+                  }).catch(function() {});
+              } catch (e) {}
+          }
+
+          function paintPastScores(list, scores) {
               list.innerHTML = '';
-              var scores = loadPastScores();
               if (scores.length === 0) {
                   var empty = document.createElement('p');
                   empty.className = 'text-neutral-500';
@@ -1913,6 +1983,21 @@
                   row.appendChild(right);
                   list.appendChild(row);
               });
+          }
+
+          function renderPastScores() {
+              var list = document.getElementById('past-scores-list');
+              if (!list) return;
+              paintPastScores(list, loadPastScores());
+              try {
+                  fetch('/api/scores?scope=recent&player=' + encodeURIComponent(PLAYER_NAME) + '&limit=20').then(function(r) {
+                      return r.ok ? r.json() : null;
+                  }).then(function(data) {
+                      var rows = data && data.scores ? data.scores : null;
+                      if (!rows || !rows.length) return;
+                      paintPastScores(list, rows.map(function(e) { return e.score; }));
+                  }).catch(function() {});
+              } catch (e) {}
           }
 
           var scoresModal = document.getElementById('scores-modal');

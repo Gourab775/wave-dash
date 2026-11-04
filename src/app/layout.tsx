@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import ClerkProviderWrapper from "@/components/ClerkProvider";
 
 const title = "Wave Dash — Neon Wave Game";
 const description =
@@ -58,7 +59,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="h-full">
-      <body className="min-h-full bg-black" suppressHydrationWarning>{children}</body>
+      <body className="min-h-full bg-black" suppressHydrationWarning>
+        <ClerkProviderWrapper>{children}</ClerkProviderWrapper>
+      </body>
     </html>
   );
 }

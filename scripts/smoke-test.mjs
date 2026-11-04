@@ -157,13 +157,20 @@ if (!browserExe) {
       }
     });
     on("Log.entryAdded", p => consoleErrors.push(`log.${p.entry.level}: ${p.entry.text.slice(0, 140)}`));
-    on("Network.loadingFailed", p => failedRequests.push(`${p.errorText} (${p.type})`));
+    on("Network.loadingFailed", p => {
+      /* ERR_ABORTED is a benign cancelled fetch (Clerk-internal), not a failure. */
+      if (p.errorText === "net::ERR_ABORTED") return;
+      failedRequests.push(`${p.errorText} (${p.type})`);
+    });
     on("Network.responseReceived", p => {
       const s = p.response.status;
       const u = p.response.url;
       if (u.startsWith("data:")) return; // inline data URIs are not external
       if (s >= 400) failedRequests.push(`${s} ${u}`);
-      if (!/^https?:\/\/(localhost|127\.0\.0\.1)/.test(u)) externalRequests.push(u);
+    const host = (new URL(u)).hostname;
+    const isLocal = host === 'localhost' || host === '127.0.0.1';
+    const clerkHost = /(^|\.)clerk\.accounts\.dev$/.test(host) || host === 'clerk-telemetry.com' || /(^|\.)protect\.clerk\.com$/.test(host);
+    if (!isLocal && !clerkHost) externalRequests.push(u);
     });
 
     await send("Page.enable");
@@ -512,6 +519,68 @@ if (!browserExe) {
       ok("mobile run exits cleanly", backToMenuM, String(backToMenuM));
       await send("Emulation.clearDeviceMetricsOverride");
       await sleep(400);
+
+      // --- round-3 features: github anchor + icon lock/unlock + bot auto-retry ---
+      phase("round-3: github anchor + icon lock/unlock + bot auto-retry");
+      const ghHref = await E(`(function(){ var a = document.getElementById('btn-github'); return a ? a.getAttribute('href') : null; })()`);
+      ok("github icon links straight to profile", ghHref === "https://github.com/Gourab775", String(ghHref));
+      await shot("10-github-anchor.png");
+
+      /* icon lock: triangle is a score-milestone (5). Force it locked, click, expect no selection + locked toast. */
+      await E(`(function(){ var s = WD.store; s.best = 0; s.unlockedIcons = ['wave']; s.icon = 'wave'; WD.persist(); WD.engine.updateMenuBest(); })()`);
+      await E(`document.getElementById('btn-open-icon-kit').click()`); await sleep(300);
+      const kitOpen = await dialogVisible("icon-kit-modal");
+      await E(`(function(){ var b = document.querySelector('#icon-kit-options [data-icon="triangle"]'); if (b) b.click(); })()`);
+      await sleep(300);
+      const stillWave = await E(`WD.store.icon === 'wave'`);
+      const lockedToast = await E(`(function(){ var r = document.getElementById('toast-root'); console.log('TOAST_ROOT innerText:', JSON.stringify(r ? r.innerText : null)); return r && /locked/i.test(r.innerText || ''); })()`);
+      await send("Input.dispatchKeyEvent", { type: "keyDown", key: "Escape", code: "Escape", windowsVirtualKeyCode: 27 });
+      await sleep(200);
+      ok("locked icon not selectable + locked toast", kitOpen && stillWave && !!lockedToast,
+        `kit=${kitOpen} icon=${stillWave} toast=${lockedToast}`);
+      await shot("11-icon-locked.png");
+
+      /* unlock triangle via milestone + daily-grant path, then confirm selectable. */
+      await E(`(function(){ var s = WD.store; s.best = 6; s.unlockedIcons = ['wave']; s.icon = 'wave'; WD.persist(); WD.checkIconMilestones(6); })()`);
+      await sleep(700); // milestone toast delay
+      const unlockedToast = await E(`(function(){ var r = document.getElementById('toast-root'); return r && /Icon unlocked/.test(r.innerText || ''); })()`);
+      await E(`document.getElementById('btn-open-icon-kit').click()`); await sleep(300);
+      await E(`(function(){ var b = document.querySelector('#icon-kit-options [data-icon="triangle"]'); if (b) b.click(); })()`);
+      await sleep(300);
+      const nowTriangle = await E(`WD.store.icon === 'triangle'`);
+      ok("score-milestone icon unlocks + is selectable", nowTriangle && !!unlockedToast,
+        `icon=${nowTriangle} toast=${unlockedToast}`);
+      await send("Input.dispatchKeyEvent", { type: "keyDown", key: "Escape", code: "Escape", windowsVirtualKeyCode: 27 });
+      await sleep(200);
+      await E(`document.getElementById('mode-medium').click()`); // restore default difficulty
+
+      /* bot auto-retry: deterministic — enable bot, start a run, force a death via die(),
+         then assert the game restarts ~1s later (isPlaying true, dead cleared, overlay gone). */
+      await E(`document.getElementById('mode-hard').click()`);
+      await E(`(function(){ document.getElementById('toggle-autoplay-pause').click(); })()`);
+      await sleep(200);
+      const botEnabled = await E(`WD.engine.bot.enabled === true`);
+      await send("Input.dispatchKeyEvent", { type: "keyDown", key: " ", code: "Space", windowsVirtualKeyCode: 32 });
+      await sleep(260);
+      await send("Input.dispatchKeyEvent", { type: "keyUp", key: " ", code: "Space", windowsVirtualKeyCode: 32 });
+      let botPlaying = false;
+      for (let i = 0; i < 20; i++) { botPlaying = await E(`WD.engine.isPlaying()`); if (botPlaying) break; await sleep(150); }
+      ok("bot run starts", botPlaying, `isPlaying=${botPlaying}`);
+      if (botPlaying) {
+        await E(`WD.engine.die()`);
+        await sleep(1300); // bot auto-retries ~1s after death
+        const restarted = await E(`WD.engine.isPlaying() === true && WD.engine.isDead() === false
+          && document.getElementById('gameover-overlay').classList.contains('hidden')`);
+        ok("bot auto-retries ~1s after death and restarts the run", !!restarted,
+          `playing=${restarted}`);
+        await E(`(function(){ document.getElementById('toggle-autoplay-pause').click(); })()`);
+        await sleep(200);
+        await E(`document.getElementById('quit-to-menu-btn').click()`); await sleep(400);
+        await E(`document.getElementById('mode-medium').click()`); // restore default difficulty
+      } else {
+        ok("bot run starts", false, "never started playing");
+      }
+
     } catch (err) {
       ok("interaction flow completed", false, err.message);
     }

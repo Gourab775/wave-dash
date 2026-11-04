@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useUser, useAuth, SignedIn, SignedOut, SignIn } from "@clerk/nextjs";
+import { useUser, useAuth, SignIn } from "@clerk/nextjs";
 
 /**
  * Hosts the self-contained canvas game (/wave-dash.html) fullscreen.
@@ -139,60 +139,63 @@ export default function GameFrame() {
             </div>
             <p className="text-neutral-400 text-sm mb-8">Sign in securely with Clerk to save runs and climb the leaderboard.</p>
             <div className="flex flex-col gap-4">
-              <SignedIn>
-                <div className="flex items-center gap-3 p-3 rounded-xl bg-neutral-900/50 border border-neutral-800 mb-4">
-                  {imageUrl ? (
-                    <img src={imageUrl} alt="" className="w-10 h-10 rounded-full object-cover border border-neutral-700" />
-                  ) : (
-                    <div className="w-10 h-10 rounded-full bg-neutral-800 flex items-center justify-center text-neutral-400 font-medium">{displayName?.[0] || "?"}</div>
-                  )}
-                  <div>
-                    <div className="text-sm font-medium text-white">{displayName || "Player"}</div>
-                    <div className="text-[11px] text-neutral-500">{user?.id}</div>
+              {!isLoaded ? null : isSignedIn ? (
+                <>
+                  <div className="flex items-center gap-3 p-3 rounded-xl bg-neutral-900/50 border border-neutral-800 mb-4">
+                    {imageUrl ? (
+                      <img src={imageUrl} alt="" className="w-10 h-10 rounded-full object-cover border border-neutral-700" />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-neutral-800 flex items-center justify-center text-neutral-400 font-medium">{displayName?.[0] || "?"}</div>
+                    )}
+                    <div>
+                      <div className="text-sm font-medium text-white">{displayName || "Player"}</div>
+                      <div className="text-[11px] text-neutral-500">{user?.id}</div>
+                    </div>
                   </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={handleSignOut}
-                  className="wd-focusable w-full py-2.5 rounded-full border border-neutral-700 bg-neutral-800 text-neutral-200 font-semibold text-sm hover:bg-neutral-700 hover:text-white active:scale-95 transition-all cursor-pointer"
-                >
-                  Sign out
-                </button>
-              </SignedIn>
-              <SignedOut>
-                <SignIn
-                  appearance={{
-                    variables: {
-                      colorPrimary: "#00f5d4",
-                      colorBackground: "#0a0a0a",
-                      colorForeground: "#ffffff",
-                      colorDanger: "#ff006e",
-                      colorSuccess: "#00f5d4",
-                      fontFamily: '"Inter", sans-serif',
-                      borderRadius: "12px",
-                    },
-                    elements: {
-                      rootBox: "flex flex-col gap-4",
-                      headerTitle: "text-2xl font-bold text-white mb-2",
-                      headerSubtitle: "text-neutral-400 text-sm mb-6",
-                      formButtonPrimary: "w-full py-3 rounded-xl bg-gradient-to-br from-rose-500 via-rose-600 to-rose-700 text-white font-bold shadow-[0_0_40px_-12px_rgba(251,113,133,0.6)] hover:from-rose-400 hover:to-rose-600 transition-all",
-                      socialButtonsBlockButton: "w-full py-3 rounded-xl border border-neutral-700 bg-neutral-900/80 text-neutral-200 font-medium hover:bg-neutral-800 transition-colors",
-                      socialButtonsBlockIcon: "w-5 h-5",
-                      card: "w-full rounded-2xl bg-neutral-950 border border-neutral-800 p-6 shadow-[0_0_60px_-20px_rgba(251,113,133,0.35)]",
-                    },
-                  }}
-                  signInUrl="/sign-in"
-                />
-                <p className="mt-4 text-center text-xs text-neutral-500">
-                  Don&apos;t want an account? <button
+                  <button
                     type="button"
-                    onClick={() => setShowSignIn(false)}
-                    className="text-rose-400 underline underline-offset-4 hover:text-rose-300 cursor-pointer"
+                    onClick={handleSignOut}
+                    className="wd-focusable w-full py-2.5 rounded-full border border-neutral-700 bg-neutral-800 text-neutral-200 font-semibold text-sm hover:bg-neutral-700 hover:text-white active:scale-95 transition-all cursor-pointer"
                   >
-                    Continue as guest
+                    Sign out
                   </button>
-                </p>
-              </SignedOut>
+                </>
+              ) : (
+                <>
+                  <SignIn
+                    appearance={{
+                      variables: {
+                        colorPrimary: "#00f5d4",
+                        colorBackground: "#0a0a0a",
+                        colorForeground: "#ffffff",
+                        colorDanger: "#ff006e",
+                        colorSuccess: "#00f5d4",
+                        fontFamily: '"Inter", sans-serif',
+                        borderRadius: "12px",
+                      },
+                      elements: {
+                        rootBox: "flex flex-col gap-4",
+                        headerTitle: "text-2xl font-bold text-white mb-2",
+                        headerSubtitle: "text-neutral-400 text-sm mb-6",
+                        formButtonPrimary: "w-full py-3 rounded-xl bg-gradient-to-br from-rose-500 via-rose-600 to-rose-700 text-white font-bold shadow-[0_0_40px_-12px_rgba(251,113,133,0.6)] hover:from-rose-400 hover:to-rose-600 transition-all",
+                        socialButtonsBlockButton: "w-full py-3 rounded-xl border border-neutral-700 bg-neutral-900/80 text-neutral-200 font-medium hover:bg-neutral-800 transition-colors",
+                        socialButtonsBlockIcon: "w-5 h-5",
+                        card: "w-full rounded-2xl bg-neutral-950 border border-neutral-800 p-6 shadow-[0_0_60px_-20px_rgba(251,113,133,0.35)]",
+                      },
+                    }}
+                    signInUrl="/sign-in"
+                  />
+                  <p className="mt-4 text-center text-xs text-neutral-500">
+                    Don&apos;t want an account? <button
+                      type="button"
+                      onClick={() => setShowSignIn(false)}
+                      className="text-rose-400 underline underline-offset-4 hover:text-rose-300 cursor-pointer"
+                    >
+                      Continue as guest
+                    </button>
+                  </p>
+                </>
+              )}
             </div>
             <p className="mt-6 text-[10px] uppercase tracking-[0.2em] text-neutral-600 text-center">
               Powered by Clerk &bull; Wave Dash v2.2.0

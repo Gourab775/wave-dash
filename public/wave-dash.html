@@ -441,6 +441,10 @@
           <span><span id="daily-streak-value" class="text-white font-semibold">0</span>-day streak</span>
         </div>
         <div id="daily-calendar" class="grid grid-cols-4 gap-2 mb-5 w-full"></div>
+        <div class="w-full text-left mb-6">
+          <h3 class="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-400 mb-3">Daily Icons</h3>
+          <div id="daily-icon-strip" class="flex flex-wrap items-center gap-2"></div>
+        </div>
         <p id="daily-note" class="text-xs text-neutral-500 mb-6">Come back every day to unlock exclusive wave colors. Miss a day and the streak resets!</p>
         <button id="btn-claim-daily" class="wd-focusable px-10 py-4 rounded-full bg-white text-neutral-950 font-bold text-lg hover:bg-neutral-200 hover:scale-[1.03] active:scale-95 transition-all shadow-[0_0_50px_-10px_rgba(255,255,255,0.6)] cursor-pointer">Claim today&rsquo;s gift</button>
         <button id="btn-close-daily" class="wd-focusable mt-4 px-6 py-2.5 rounded-xl bg-neutral-900/80 text-neutral-300 font-medium border border-neutral-800 hover:bg-neutral-800 hover:text-white transition-all cursor-pointer">Close</button>
@@ -2319,6 +2323,49 @@
           chip.appendChild(swatch);
           chip.appendChild(label);
           dailyCalendar.appendChild(chip);
+        }
+        renderDailyIconStrip();
+      }
+
+      function renderDailyIconStrip() {
+        var strip = $id('daily-icon-strip');
+        if (!strip) return;
+        strip.innerHTML = '';
+        var nextIdx = -1;
+        for (var j = 0; j < WD.DAILY_ICON_POOL.length; j++) {
+          if (S.unlockedIcons.indexOf(WD.DAILY_ICON_POOL[j]) === -1) { nextIdx = j; break; }
+        }
+        WD.DAILY_ICON_POOL.forEach(function (name, idx) {
+          var unlocked = S.unlockedIcons.indexOf(name) !== -1;
+          var isNext = idx === nextIdx && !isClaimedToday();
+          var item = document.createElement('div');
+          item.className = 'flex flex-col items-center gap-1.5';
+          var tile = document.createElement('div');
+          tile.className = 'w-14 h-14 rounded-xl border flex items-center justify-center ' +
+            (unlocked ? 'border-green-800/50 bg-neutral-900/70' : 'border-neutral-800 bg-neutral-900/50') +
+            (isNext ? ' ring-1 ring-rose-400/70' : '');
+          if (unlocked) {
+            var img = document.createElement('img');
+            img.src = WD.ICONS[name];
+            img.alt = (WD.ICON_LABELS[name] || name) + ' icon';
+            img.className = 'w-9 h-9 object-contain rotate-90';
+            tile.appendChild(img);
+          } else {
+            tile.innerHTML = LOCK_BADGE_SVG;
+            tile.classList.add('text-neutral-500');
+          }
+          var label = document.createElement('span');
+          label.className = 'text-[10px] leading-tight text-center max-w-[3.5rem] truncate ' + (unlocked ? 'text-green-300' : 'text-neutral-500');
+          label.textContent = WD.ICON_LABELS[name] || name;
+          item.appendChild(tile);
+          item.appendChild(label);
+          strip.appendChild(item);
+        });
+        if (nextIdx === -1) {
+          var done = document.createElement('p');
+          done.className = 'text-xs text-green-400 w-full';
+          done.textContent = 'All daily icons unlocked — keep claiming for exclusive trail colors!';
+          strip.appendChild(done);
         }
       }
 

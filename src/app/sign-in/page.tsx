@@ -22,7 +22,7 @@ export default function SignInPage() {
   if (isSignedIn) {
     /* After signing in, go back to the game shell so the postMessage bridge
        can relay the user into the iframe. */
-    router.push("/game");
+    router.push("/");
     return null;
   }
 

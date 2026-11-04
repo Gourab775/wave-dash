@@ -40,24 +40,6 @@ export default function GameFrame() {
     primaryEmailAddress?.emailAddress ||
     (isSignedIn ? "Player" : null);
 
-  /* Allow copying a Clerk dev-browser URL to the system clipboard (writeText). */
-  useEffect(() => {
-    const allowClipboard = () => {
-      try {
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          navigator.clipboard.writeText('clerk dev browser ready').catch(() => {});
-        }
-      } catch (e) {}
-    };
-    if (document.hasFocus()) allowClipboard();
-    window.addEventListener('focus', allowClipboard);
-    document.addEventListener('pointerdown', allowClipboard);
-    return () => {
-      window.removeEventListener('focus', allowClipboard);
-      document.removeEventListener('pointerdown', allowClipboard);
-    };
-  }, []);
-
   const postToGame = useCallback(
     (msg: { type: string; user?: { id: string; name: string } | null }) => {
       const frame = frameRef.current?.contentWindow;

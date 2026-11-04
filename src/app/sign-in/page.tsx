@@ -56,7 +56,7 @@ export default function SignInPage() {
         </div>
         <SignIn
           appearance={appearance}
-          signInUrl="/sign-in"
+          routing="hash"
         />
         <p className="mt-8 text-center text-[11px] uppercase tracking-[0.2em] text-neutral-600">
           Powered by Clerk &bull; Wave Dash v2.2.0

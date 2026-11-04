@@ -40,6 +40,24 @@ export default function GameFrame() {
     primaryEmailAddress?.emailAddress ||
     (isSignedIn ? "Player" : null);
 
+  /* Allow copying a Clerk dev-browser URL to the system clipboard (writeText). */
+  useEffect(() => {
+    const allowClipboard = () => {
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText('clerk dev browser ready').catch(() => {});
+        }
+      } catch (e) {}
+    };
+    if (document.hasFocus()) allowClipboard();
+    window.addEventListener('focus', allowClipboard);
+    document.addEventListener('pointerdown', allowClipboard);
+    return () => {
+      window.removeEventListener('focus', allowClipboard);
+      document.removeEventListener('pointerdown', allowClipboard);
+    };
+  }, []);
+
   const postToGame = useCallback(
     (msg: { type: string; user?: { id: string; name: string } | null }) => {
       const frame = frameRef.current?.contentWindow;
@@ -183,7 +201,8 @@ export default function GameFrame() {
                         card: "w-full rounded-2xl bg-neutral-950 border border-neutral-800 p-6 shadow-[0_0_60px_-20px_rgba(251,113,133,0.35)]",
                       },
                     }}
-                    signInUrl="/sign-in"
+                    routing="hash"
+                    fallbackRedirectUrl="/"
                   />
                   <p className="mt-4 text-center text-xs text-neutral-500">
                     Don&apos;t want an account? <button

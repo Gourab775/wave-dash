@@ -1,0 +1,5 @@
+/* Input for the Wave Dash in-game stylesheet.
+   Built to public/assets/css/game.css by `npm run build:css`. */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;

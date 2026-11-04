@@ -4,6 +4,7 @@ body {
   padding: 0;
   background: #000;
   height: 100%;
+  overflow: hidden;
 }
 
 .wave-dash-frame {
@@ -12,4 +13,33 @@ body {
   border: 0;
   display: block;
   background: #000;
+}
+
+.wd-frame-fullscreen-btn {
+  position: fixed;
+  bottom: 16px;
+  right: 16px;
+  z-index: 40;
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  border: 1px solid rgba(38, 38, 38, 0.9);
+  background: rgba(10, 10, 10, 0.65);
+  color: #a3a3a3;
+  backdrop-filter: blur(6px);
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.wd-frame-fullscreen-btn:hover {
+  color: #fff;
+  border-color: #525252;
+}
+
+:fullscreen .wd-frame-fullscreen-btn,
+:-webkit-full-screen .wd-frame-fullscreen-btn {
+  display: none;
 }

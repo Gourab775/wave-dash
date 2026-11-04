@@ -19,19 +19,44 @@
     canvas{touch-action:none;}
     :focus{outline:none;}
     .wd-focusable:focus-visible{outline:2px solid rgba(255,255,255,.45);outline-offset:2px;border-radius:.5rem;}
+    /* Safe areas (notches / home bars) */
+    :root{--sa-t:env(safe-area-inset-top,0px);--sa-r:env(safe-area-inset-right,0px);--sa-b:env(safe-area-inset-bottom,0px);--sa-l:env(safe-area-inset-left,0px);}
+    html,body{-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%;overscroll-behavior:none;}
+    body{touch-action:manipulation;-webkit-user-select:none;user-select:none;}
+    input{touch-action:auto;-webkit-user-select:text;user-select:text;}
+    img,button,a{-webkit-touch-callout:none;}
+    #ui-layer{padding-top:calc(2rem + var(--sa-t));padding-right:calc(2rem + var(--sa-r));padding-bottom:calc(2rem + var(--sa-b));padding-left:calc(2rem + var(--sa-l));}
+    #hud-score{top:calc(2rem + var(--sa-t));right:calc(2rem + var(--sa-r));}
+    #best-display{top:calc(6rem + var(--sa-t));right:calc(2rem + var(--sa-r));}
+    #cps-display{top:calc(9rem + var(--sa-t));right:calc(2rem + var(--sa-r));}
+    #pause-btn-container{top:calc(2rem + var(--sa-t));left:calc(2rem + var(--sa-l));}
+    #attempt-label{top:calc(2rem + var(--sa-t));}
+    #custom-badge{top:calc(3.5rem + var(--sa-t));}
+    #hint-label{bottom:calc(6rem + var(--sa-b));}
+    #quick-actions{bottom:calc(2rem + var(--sa-b));}
+    @media (min-width: 768px) { #quick-actions{bottom:calc(2.5rem + var(--sa-b));} }
     #toast-root > div{animation:wd-toast-in .18s ease-out;}
     #toast-root > div.wd-toast-out{animation:wd-toast-out .25s ease-in forwards;}
     @keyframes wd-toast-in{from{opacity:0;transform:translateY(10px) scale(.96);}to{opacity:1;transform:translateY(0) scale(1);}}
     @keyframes wd-toast-out{from{opacity:1;}to{opacity:0;transform:translateY(8px);}}
     #gameover-overlay{transition:opacity .2s ease;}
     #pause-menu{transition:opacity .3s ease;}
-    #attempt-label,#custom-badge,#bot-badge{animation:wd-badge-in .35s ease-out;}
+    #attempt-label,#custom-badge{animation:wd-badge-in .35s ease-out;}
     @keyframes wd-badge-in{from{opacity:0;transform:translate(-50%,-6px);}to{opacity:1;transform:translate(-50%,0);}}
     #btn-claim-daily{transition:transform .15s ease;}
     @media (max-width: 639px) {
       html, body { max-width: 100% !important; overflow-x: hidden !important; }
       #root { max-width: 100% !important; }
       img, video, canvas, svg { max-width: 100%; }
+    }
+    /* Short screens: compact phones (portrait) & landscape phones */
+    @media (max-height: 600px) {
+      #center-row { top: 40%; }
+      #player-name-label { display: none; }
+    }
+    @media (max-height: 500px) {
+      #start-btn { width: 6.5rem; height: 6.5rem; border-radius: 1.75rem; }
+      #btn-open-icon-kit, #btn-open-editor { width: 4.5rem; height: 4.5rem; border-radius: 1.25rem; }
     }
     @media (prefers-reduced-motion: reduce) {
       * { animation-duration: 0.001s !important; transition-duration: 0.001s !important; }
@@ -46,9 +71,9 @@
   <audio id="death-sfx" src="assets/audio/death-sfx.mp3" preload="auto"></audio>
 
   <!-- Score HUD -->
-  <div class="absolute top-8 right-8 z-20 flex items-center gap-3">
-    <span class="text-lg text-neutral-500 font-medium tracking-wide uppercase">Score</span>
-    <span id="score-display" class="text-4xl font-semibold tracking-tight text-white tabular-nums drop-shadow-md transition-transform duration-100">0</span>
+  <div id="hud-score" class="absolute top-8 right-8 z-20 flex items-center gap-3">
+    <span class="text-base sm:text-lg text-neutral-500 font-medium tracking-wide uppercase">Score</span>
+    <span id="score-display" class="text-3xl sm:text-4xl font-semibold tracking-tight text-white tabular-nums drop-shadow-md transition-transform duration-100">0</span>
   </div>
   <div id="best-display" class="hidden absolute top-24 right-8 z-20 flex items-center gap-2 text-sm font-medium tracking-wide text-neutral-500 uppercase tabular-nums">
     <i data-lucide="crown" class="w-4 h-4 text-amber-400"></i>
@@ -61,7 +86,6 @@
   <!-- In-run badges -->
   <div id="attempt-label" class="hidden absolute top-8 left-1/2 -translate-x-1/2 z-20 text-sm font-medium tracking-[0.2em] text-neutral-500 uppercase tabular-nums">Attempt 1</div>
   <div id="custom-badge" class="hidden absolute top-14 left-1/2 -translate-x-1/2 z-20 text-xs font-semibold tracking-[0.25em] text-[#6df7b8] uppercase">Custom Run</div>
-  <div id="bot-badge" class="hidden absolute top-14 left-1/2 -translate-x-1/2 z-20 text-xs font-semibold tracking-[0.25em] text-purple-300 uppercase">Autoplay Bot</div>
   <div id="hint-label" class="hidden absolute bottom-24 left-1/2 -translate-x-1/2 z-20 text-xs font-medium tracking-[0.2em] text-neutral-400 uppercase pointer-events-none">Hold to glide up &bull; Release to dive</div>
 
   <!-- Pause Button (Hidden by default) -->
@@ -77,7 +101,7 @@
     <div class="flex justify-between items-start pointer-events-auto">
       <div class="w-12"></div>
       <div class="flex flex-col items-center mt-2">
-        <h1 id="title" class="text-7xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-b from-white to-neutral-400 drop-shadow-2xl uppercase">
+        <h1 id="title" class="text-5xl sm:text-7xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-b from-white to-neutral-400 drop-shadow-2xl uppercase text-center">
           Wave Dash
         </h1>
       </div>
@@ -85,37 +109,37 @@
     </div>
 
     <!-- Center Row -->
-    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center gap-8 md:gap-12 pointer-events-auto">
+    <div id="center-row" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center gap-4 sm:gap-8 md:gap-12 pointer-events-auto">
       <!-- Customize Button -->
-      <button id="btn-open-icon-kit" aria-label="Customize your icon" title="Customize" class="wd-focusable relative group w-28 h-28 md:w-32 md:h-32 flex items-center justify-center rounded-[2rem] bg-neutral-900/80 backdrop-blur-md border border-neutral-800 shadow-xl hover:bg-neutral-800 hover:border-neutral-600 transition-all hover:-translate-y-1 cursor-pointer">
-        <i data-lucide="square-user" class="w-10 h-10 md:w-12 md:h-12 text-neutral-400 group-hover:text-white transition-colors"></i>
-        <span class="absolute -bottom-8 text-sm font-medium text-neutral-500 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">Customize</span>
+      <button id="btn-open-icon-kit" aria-label="Customize your icon" title="Customize" class="wd-focusable relative group w-20 h-20 sm:w-28 sm:h-28 md:w-32 md:h-32 flex items-center justify-center rounded-[1.5rem] sm:rounded-[2rem] bg-neutral-900/80 backdrop-blur-md border border-neutral-800 shadow-xl hover:bg-neutral-800 hover:border-neutral-600 transition-all hover:-translate-y-1 cursor-pointer">
+        <i data-lucide="square-user" class="w-7 h-7 sm:w-10 sm:h-10 md:w-12 md:h-12 text-neutral-400 group-hover:text-white transition-colors"></i>
+        <span class="absolute -bottom-8 text-sm font-medium text-neutral-500 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none hidden sm:block">Customize</span>
       </button>
 
       <!-- Play Button -->
-      <button id="start-btn" aria-label="Start game" class="wd-focusable relative group w-36 h-36 md:w-44 md:h-44 flex items-center justify-center rounded-[2.5rem] bg-white shadow-[0_0_60px_-15px_rgba(255,255,255,0.4)] hover:bg-neutral-200 hover:scale-[1.03] active:scale-95 transition-all cursor-pointer">
-        <i data-lucide="play" class="w-14 h-14 md:w-16 md:h-16 fill-neutral-950 text-neutral-950 translate-x-1 transition-transform group-hover:scale-105"></i>
+      <button id="start-btn" aria-label="Start game" class="wd-focusable relative group w-28 h-28 sm:w-36 sm:h-36 md:w-44 md:h-44 flex items-center justify-center rounded-[2rem] sm:rounded-[2.5rem] bg-white shadow-[0_0_60px_-15px_rgba(255,255,255,0.4)] hover:bg-neutral-200 hover:scale-[1.03] active:scale-95 transition-all cursor-pointer">
+        <i data-lucide="play" class="w-10 h-10 sm:w-14 sm:h-14 md:w-16 md:h-16 fill-neutral-950 text-neutral-950 translate-x-1 transition-transform group-hover:scale-105"></i>
         <span class="sr-only">Start Game</span>
         <span id="subtitle" class="absolute -bottom-10 text-sm font-medium text-neutral-500 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-md pointer-events-none">Press Space or Click</span>
         <span id="best-badge" class="hidden absolute -bottom-[4.2rem] left-1/2 -translate-x-1/2 text-xs font-semibold tracking-[0.25em] text-neutral-500 uppercase whitespace-nowrap pointer-events-none">Best <span id="best-badge-value">0</span></span>
       </button>
 
       <!-- Pattern Editor Button -->
-      <button id="btn-open-editor" aria-label="Open pattern editor" title="Pattern editor" class="wd-focusable relative group w-28 h-28 md:w-32 md:h-32 flex items-center justify-center rounded-[2rem] bg-neutral-900/80 backdrop-blur-md border border-neutral-800 shadow-xl hover:bg-neutral-800 hover:border-neutral-600 transition-all hover:-translate-y-1 cursor-pointer">
-        <i data-lucide="pen-tool" class="w-10 h-10 md:w-12 md:h-12 text-neutral-400 group-hover:text-white transition-colors"></i>
-        <span class="absolute -bottom-8 text-sm font-medium text-neutral-500 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">Editor</span>
+      <button id="btn-open-editor" aria-label="Open pattern editor" title="Pattern editor" class="wd-focusable relative group w-20 h-20 sm:w-28 sm:h-28 md:w-32 md:h-32 flex items-center justify-center rounded-[1.5rem] sm:rounded-[2rem] bg-neutral-900/80 backdrop-blur-md border border-neutral-800 shadow-xl hover:bg-neutral-800 hover:border-neutral-600 transition-all hover:-translate-y-1 cursor-pointer">
+        <i data-lucide="pen-tool" class="w-7 h-7 sm:w-10 sm:h-10 md:w-12 md:h-12 text-neutral-400 group-hover:text-white transition-colors"></i>
+        <span class="absolute -bottom-8 text-sm font-medium text-neutral-500 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none hidden sm:block">Editor</span>
       </button>
     </div>
 
     <!-- Bottom Row -->
-    <div class="flex justify-between items-end pointer-events-auto w-full">
+    <div class="flex flex-col items-center gap-2 sm:flex-row sm:justify-between sm:items-end pointer-events-auto w-full">
       <!-- Profile / Socials -->
-      <div class="flex flex-col gap-3">
+      <div class="flex flex-col gap-3 sm:items-start">
         <span id="player-name-label" class="text-base font-medium tracking-wide text-neutral-300 uppercase ml-1">Player 1</span>
         <button id="btn-profile" aria-label="Open profile" title="Profile &amp; stats" class="wd-focusable w-14 h-14 md:w-16 md:h-16 rounded-full border border-neutral-700 bg-neutral-900/80 backdrop-blur-md flex items-center justify-center shadow-lg hover:border-neutral-500 transition-colors cursor-pointer">
           <i data-lucide="user" class="text-neutral-400 w-6 h-6 md:w-8 md:h-8"></i>
         </button>
-        <div class="flex gap-2 mt-1">
+        <div class="hidden sm:flex gap-2 mt-1">
           <button id="btn-share-x" aria-label="Share your best score on X" title="Share on X" class="wd-focusable w-8 h-8 md:w-9 md:h-9 rounded-lg border border-neutral-800 bg-neutral-900/80 flex items-center justify-center hover:bg-neutral-800 transition-colors group cursor-pointer">
             <svg viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4 text-neutral-500 group-hover:text-white transition-colors" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
           </button>
@@ -126,11 +150,11 @@
             <svg viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4 text-neutral-500 group-hover:text-white transition-colors" aria-hidden="true"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
           </button>
         </div>
-        <span class="text-sm font-medium tracking-wide text-neutral-500 uppercase mt-1 ml-1">v2.0.0</span>
+        <span class="hidden sm:block text-sm font-medium tracking-wide text-neutral-500 uppercase mt-1 ml-1">v2.1.0</span>
       </div>
 
       <!-- Quick actions (bottom center) -->
-      <div class="absolute bottom-8 md:bottom-10 left-1/2 -translate-x-1/2 flex items-center justify-center gap-3 md:gap-4">
+      <div id="quick-actions" class="static sm:absolute sm:bottom-8 md:bottom-10 sm:left-1/2 sm:-translate-x-1/2 flex items-center justify-center gap-2 sm:gap-3 md:gap-4">
         <button id="btn-open-daily" aria-label="Daily reward gift" title="Daily reward" class="wd-focusable relative w-10 h-10 md:w-14 md:h-14 rounded-full border border-neutral-800 bg-neutral-900/80 backdrop-blur-md flex items-center justify-center hover:bg-neutral-800 hover:scale-105 active:scale-95 transition-all group shadow-lg cursor-pointer">
           <i data-lucide="gift" class="w-5 h-5 md:w-6 md:h-6 text-neutral-400 group-hover:text-rose-300 transition-colors"></i>
           <span id="daily-dot" class="hidden absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-rose-400 shadow-[0_0_10px_2px_rgba(251,113,133,0.6)]"></span>
@@ -153,16 +177,16 @@
       </div>
 
       <!-- Mode & Size Selectors -->
-      <div class="flex flex-col items-end gap-3 pb-1">
+      <div class="flex flex-col items-end gap-2 sm:gap-3 pb-1">
         <span class="text-sm font-medium tracking-wide text-neutral-500 uppercase mr-1 mb-1 hidden md:block">Game Options</span>
-        <div id="mode-selector" class="inline-flex items-center justify-center gap-2 bg-neutral-900/80 p-1.5 rounded-xl border border-neutral-800 backdrop-blur-md shadow-inner" role="group" aria-label="Difficulty">
-          <button id="mode-easy" class="wd-focusable px-4 py-2 rounded-md bg-neutral-800 text-neutral-400 border border-neutral-700 hover:text-white transition-colors text-sm cursor-pointer">Easy</button>
-          <button id="mode-medium" class="wd-focusable px-4 py-2 rounded-md bg-white text-neutral-950 font-medium border border-white transition-colors text-sm cursor-pointer">Medium</button>
-          <button id="mode-hard" class="wd-focusable px-4 py-2 rounded-md bg-neutral-800 text-neutral-400 border border-neutral-700 hover:text-white transition-colors text-sm cursor-pointer">Hard</button>
+        <div id="mode-selector" class="inline-flex items-center justify-center gap-1.5 sm:gap-2 bg-neutral-900/80 p-1 sm:p-1.5 rounded-xl border border-neutral-800 backdrop-blur-md shadow-inner" role="group" aria-label="Difficulty">
+          <button id="mode-easy" class="wd-focusable px-3 py-1.5 sm:px-4 sm:py-2 rounded-md bg-neutral-800 text-neutral-400 border border-neutral-700 hover:text-white transition-colors text-xs sm:text-sm cursor-pointer">Easy</button>
+          <button id="mode-medium" class="wd-focusable px-3 py-1.5 sm:px-4 sm:py-2 rounded-md bg-white text-neutral-950 font-medium border border-white transition-colors text-xs sm:text-sm cursor-pointer">Medium</button>
+          <button id="mode-hard" class="wd-focusable px-3 py-1.5 sm:px-4 sm:py-2 rounded-md bg-neutral-800 text-neutral-400 border border-neutral-700 hover:text-white transition-colors text-xs sm:text-sm cursor-pointer">Hard</button>
         </div>
-        <div id="size-selector" class="inline-flex items-center justify-center gap-2 bg-neutral-900/80 p-1.5 rounded-xl border border-neutral-800 backdrop-blur-md shadow-inner" role="group" aria-label="Wave size">
-          <button id="size-normal" class="wd-focusable px-4 py-2 rounded-md bg-white text-neutral-950 font-medium border border-white transition-colors text-sm cursor-pointer">Normal Wave</button>
-          <button id="size-mini" class="wd-focusable px-4 py-2 rounded-md bg-neutral-800 text-neutral-400 border border-neutral-700 hover:text-white transition-colors text-sm cursor-pointer">Mini Wave</button>
+        <div id="size-selector" class="inline-flex items-center justify-center gap-1.5 sm:gap-2 bg-neutral-900/80 p-1 sm:p-1.5 rounded-xl border border-neutral-800 backdrop-blur-md shadow-inner" role="group" aria-label="Wave size">
+          <button id="size-normal" class="wd-focusable px-3 py-1.5 sm:px-4 sm:py-2 rounded-md bg-white text-neutral-950 font-medium border border-white transition-colors text-xs sm:text-sm cursor-pointer">Normal Wave</button>
+          <button id="size-mini" class="wd-focusable px-3 py-1.5 sm:px-4 sm:py-2 rounded-md bg-neutral-800 text-neutral-400 border border-neutral-700 hover:text-white transition-colors text-xs sm:text-sm cursor-pointer">Mini Wave</button>
         </div>
       </div>
     </div>
@@ -259,8 +283,33 @@
           </div>
           <div id="changelog-leaderboard-list" class="space-y-2 max-h-[46vh] overflow-y-auto pr-2"></div>
           <p class="text-xs text-neutral-500 mt-4">Only your best runs are stored locally on this device.</p>
+          <div class="mt-3 pt-3 border-t border-neutral-800 flex items-center justify-center gap-2 text-xs text-neutral-500">
+            <i data-lucide="user-check" class="w-3.5 h-3.5 text-neutral-600"></i>
+            <span>Logged in as <span id="board-user" class="text-neutral-300">Player 1</span></span>
+            <button id="btn-board-logout" class="underline decoration-dotted underline-offset-2 text-neutral-500 hover:text-red-300 transition-colors cursor-pointer">Log out</button>
+          </div>
         </div>
         <button id="btn-close-changelog" class="wd-focusable px-8 py-3 rounded-full bg-white text-neutral-950 font-medium text-lg hover:bg-neutral-200 active:scale-95 transition-all shadow-[0_0_20px_-5px_rgba(255,255,255,0.3)] cursor-pointer">Close</button>
+      </div>
+    </div>
+
+    <!-- Leaderboard Login Gate -->
+    <div id="login-modal" class="wd-guard hidden absolute inset-0 z-[65] flex flex-col items-center justify-center bg-neutral-950/95 backdrop-blur-md transition-opacity" role="dialog" aria-modal="true" aria-label="Login required">
+      <div class="text-center w-full max-w-sm px-8 flex flex-col items-center">
+        <div class="w-20 h-20 rounded-2xl bg-neutral-900 border border-neutral-800 flex items-center justify-center mb-6 shadow-lg">
+          <i data-lucide="lock" class="w-9 h-9 text-amber-400"></i>
+        </div>
+        <h2 class="text-3xl font-semibold tracking-tight text-white mb-3">Login Required</h2>
+        <p class="text-neutral-400 text-sm mb-8">Log in to view the leaderboard and save your runs on this device.</p>
+        <div class="w-full bg-neutral-900 border border-neutral-800 rounded-xl p-6 text-left mb-8 shadow-lg">
+          <label for="login-name" class="block text-xs font-semibold uppercase tracking-wider text-neutral-500 mb-2">Player name</label>
+          <input id="login-name" type="text" maxlength="20" autocomplete="nickname" spellcheck="false" inputmode="text"
+                 class="wd-focusable w-full bg-neutral-950 border border-neutral-700 rounded-lg px-4 py-3 text-white text-base placeholder-neutral-600 focus:border-amber-400/70 outline-none transition-colors"
+                 placeholder="e.g. PixelRunner30" />
+          <p id="login-error" class="hidden text-xs text-red-400 mt-2">Name must be at least 2 characters.</p>
+          <button id="btn-login-submit" class="wd-focusable w-full mt-6 px-4 py-3 rounded-full bg-amber-400 text-neutral-950 font-bold text-base hover:bg-amber-300 active:scale-95 transition-all cursor-pointer">Log In</button>
+        </div>
+        <button id="btn-close-login" class="wd-focusable px-6 py-2 rounded-full border border-neutral-800 bg-neutral-900/80 text-neutral-300 text-sm hover:bg-neutral-800 transition-colors cursor-pointer">Not now</button>
       </div>
     </div>
 
@@ -280,9 +329,19 @@
           </div>
           <div class="mt-5 border-t border-neutral-800 pt-4 text-xs text-neutral-500 space-y-1">
             <p>Engine: HTML5 Canvas 2D &bull; Shell: Next.js 16 + Tailwind CSS &bull; Icons: Lucide</p>
-            <p>Soundtrack: fan tribute to the Geometry Dash OST (RobTop Games). Not affiliated — swap in a licensed track before any commercial release.</p>
-            <p>Version 2.0.0 &bull; Progress saved locally on your device</p>
+            <p>Soundtrack: original synthwave tracks rendered in-house, royalty-free.</p>
+            <p>Version 2.1.0 &bull; Progress saved locally on your device</p>
           </div>
+        </div>
+        <div class="flex flex-col items-center gap-3 mb-8">
+          <span class="text-[0.65rem] uppercase tracking-[0.3em] text-neutral-500">Maker</span>
+          <span class="text-xl font-semibold text-white tracking-tight">Gourab Neogi</span>
+          <a id="creator-github" href="https://github.com/Gourab775" target="_blank" rel="noopener noreferrer"
+             class="wd-focusable inline-flex items-center gap-2 px-4 py-2 rounded-full border border-neutral-700 bg-neutral-900/80 text-neutral-300 text-sm hover:bg-neutral-800 hover:text-white hover:border-neutral-500 transition-colors cursor-pointer"
+             aria-label="Maker's GitHub profile">
+            <svg viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4" aria-hidden="true"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+            <span>github.com/Gourab775</span>
+          </a>
         </div>
         <button id="btn-close-credits" class="wd-focusable px-8 py-3 rounded-full bg-white text-neutral-950 font-medium text-lg hover:bg-neutral-200 active:scale-95 transition-all shadow-[0_0_20px_-5px_rgba(255,255,255,0.3)] cursor-pointer">Close</button>
       </div>
@@ -511,6 +570,7 @@
           settings: { fps: false, cps: false, lag: false, glow: false, sfx: true, mute: false, musicVol: 40 },
           best: 0,
           attempts: 0,
+          isLoggedIn: false,
           pastScores: [],
           stats: { runs: 0, totalScore: 0 },
           daily: { lastClaim: '', streak: 0 },
@@ -715,7 +775,6 @@
       var bestBadgeValue = document.getElementById('best-badge-value');
       var attemptLabel = document.getElementById('attempt-label');
       var customBadge = document.getElementById('custom-badge');
-      var botBadge = document.getElementById('bot-badge');
       var hintLabel = document.getElementById('hint-label');
 
       var gameoverOverlay = document.getElementById('gameover-overlay');
@@ -917,7 +976,6 @@
 
         hideGameover();
         customBadge.classList.toggle('hidden', !runPattern);
-        botBadge.classList.toggle('hidden', !bot.enabled);
         attemptLabel.classList.toggle('hidden', runAttempt <= 1);
         attemptLabel.textContent = 'Attempt ' + runAttempt;
 
@@ -1021,7 +1079,6 @@
 
         var apCheckbox = document.getElementById('toggle-autoplay-pause');
         if (apCheckbox) apCheckbox.checked = false;
-        botBadge.classList.add('hidden');
         customBadge.classList.add('hidden');
 
         obstacles = [];
@@ -1063,6 +1120,15 @@
         if (!bot.enabled) isHolding = false;
       }
 
+      /* Mobile niceties: block pinch-zoom, double-tap artifacts and long-press menus */
+      document.addEventListener('gesturestart', function (e) { e.preventDefault(); });
+      document.addEventListener('gesturechange', function (e) { e.preventDefault(); });
+      window.addEventListener('contextmenu', function (e) {
+        var t = e.target;
+        if (t instanceof HTMLElement && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA')) return;
+        e.preventDefault();
+      });
+
       window.addEventListener('mousemove', function (e) { mousePos.y = e.clientY; });
       window.addEventListener('touchmove', function (e) {
         if (cheats.freeMode && e.touches[0]) mousePos.y = e.touches[0].clientY;
@@ -1100,6 +1166,16 @@
       pauseBtn.addEventListener('click', function () { WD.sfx('click'); togglePause(); });
       resumeBtn.addEventListener('click', function () { togglePause(); });
       quitToMenuBtn.addEventListener('click', function () { quitToMenu(); });
+
+      /* Game Options: difficulty + wave size (wired here; setMode guards runs) */
+      ['easy', 'medium', 'hard'].forEach(function (m) {
+        var b = document.getElementById('mode-' + m);
+        if (b) b.addEventListener('click', function () { WD.sfx('click'); setMode(m); });
+      });
+      ['normal', 'mini'].forEach(function (sz) {
+        var b = document.getElementById('size-' + sz);
+        if (b) b.addEventListener('click', function () { WD.sfx('click'); setWaveSize(sz); });
+      });
       startBtn.addEventListener('click', function () {
         if (!isPlaying) initGame(1);
       });
@@ -1550,11 +1626,12 @@
         ['btn-open-daily', 'daily-modal', 'btn-close-daily', 'renderDaily'],
         ['btn-open-scores', 'scores-modal', 'btn-close-scores', 'renderPastScores'],
         ['btn-open-settings', 'settings-modal', 'btn-close-settings'],
-        ['btn-open-changelog', 'changelog-modal', 'btn-close-changelog', 'renderBoard'],
         ['btn-open-credits', 'credits-modal', 'btn-close-credits'],
         ['btn-open-info', 'credits-modal', 'btn-close-credits'],
         ['btn-profile', 'profile-modal', 'btn-close-profile', 'renderProfile'],
-        ['btn-open-editor', 'editor-modal', 'btn-close-editor', 'editorOpen']
+        ['btn-open-editor', 'editor-modal', 'btn-close-editor', 'editorOpen'],
+        /* login gate: no open button — opened programmatically by the leaderboard check */
+        ['', 'login-modal', 'btn-close-login', 'renderLogin']
       ];
       var HOOKS = null; // filled below, after functions are defined
       var stack = [];
@@ -1595,6 +1672,17 @@
         var closeBtn = $id(dialog[2]);
         if (openBtn) openBtn.addEventListener('click', function (e) { e.stopPropagation(); openDialog(dialog); });
         if (closeBtn) closeBtn.addEventListener('click', function (e) { e.stopPropagation(); closeDialog(dialog[1]); });
+      });
+
+      /* ---------------- Leaderboard login gate ----------------
+         Board button opens the board only for logged-in players;
+         otherwise it opens the login prompt first. */
+      var BOARD_DIALOG = ['btn-open-changelog', 'changelog-modal', 'btn-close-changelog', 'renderBoard'];
+      var LOGIN_DIALOG = ['', 'login-modal', 'btn-close-login'];
+      $id('btn-open-changelog').addEventListener('click', function (e) {
+        e.stopPropagation();
+        if (S.isLoggedIn) openDialog(BOARD_DIALOG);
+        else openDialog(LOGIN_DIALOG);
       });
 
       WD.ui = {
@@ -1880,7 +1968,9 @@
       function renderBoard() {
         var list = $id('changelog-leaderboard-list');
         var boardBest = $id('board-best');
+        var boardUser = $id('board-user');
         if (!list) return;
+        if (boardUser) boardUser.textContent = S.name || 'Player 1';
         if (!list._bound) {
           /* keep function reusable without leaking listeners */
           list._bound = true;
@@ -1912,6 +2002,49 @@
         var firstRow = list.firstChild;
         if (firstRow && firstRow.scrollIntoView) firstRow.scrollIntoView({ block: 'nearest' });
       }
+
+      /* ---------------- Login / logout (local account, no backend) ---------------- */
+      function renderLogin() {
+        var input = $id('login-name');
+        var err = $id('login-error');
+        if (input && !input.value) input.value = S.name || '';
+        if (err) err.classList.add('hidden');
+      }
+      (function bindLogin() {
+        var submit = $id('btn-login-submit');
+        var input = $id('login-name');
+        var err = $id('login-error');
+        function doLogin() {
+          var name = ((input && input.value) || '').trim();
+          if (name.length < 2) {
+            if (err) err.classList.remove('hidden');
+            if (input) input.focus();
+            return;
+          }
+          if (err) err.classList.add('hidden');
+          S.name = name;
+          S.isLoggedIn = true;
+          WD.persist();
+          closeDialog('login-modal');
+          WD.toast('Welcome, ' + name + '!', 'good');
+          openDialog(BOARD_DIALOG);
+        }
+        if (submit) submit.addEventListener('click', function (e) { e.stopPropagation(); WD.sfx('click'); doLogin(); });
+        if (input) input.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter') { e.preventDefault(); doLogin(); }
+        });
+      })();
+      (function bindLogout() {
+        var btn = $id('btn-board-logout');
+        if (!btn) return;
+        btn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          S.isLoggedIn = false;
+          WD.persist();
+          closeDialog('changelog-modal');
+          WD.toast('Logged out', 'good');
+        });
+      })();
 
       /* ---------------- Past scores ---------------- */
       function renderPastScores() {
@@ -2257,6 +2390,7 @@
         renderDaily: renderDaily,
         renderPastScores: renderPastScores,
         renderBoard: renderBoard,
+        renderLogin: renderLogin,
         renderProfile: renderProfile,
         editorOpen: editorOpen
       };
@@ -2314,8 +2448,6 @@
       if (autoplayToggle) {
         autoplayToggle.addEventListener('change', function (e) {
           WD.engine.bot.enabled = e.target.checked;
-          var badge = $id('bot-badge');
-          if (badge && e.target.checked) badge.classList.remove('hidden');
           ctrlPresses = 0;
           lastCtrlTime = 0;
           if (autoplayRow && !e.target.checked) autoplayRow.style.display = 'none';
@@ -2351,7 +2483,5 @@
       if (window.lucide) { try { lucide.createIcons(); } catch (err) {} }
     })();
   </script>
-</body>
-</html>
 </body>
 </html>

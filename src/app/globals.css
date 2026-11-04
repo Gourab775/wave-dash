@@ -17,8 +17,8 @@ body {
 
 .wd-frame-fullscreen-btn {
   position: fixed;
-  bottom: 16px;
-  right: 16px;
+  bottom: calc(6px + env(safe-area-inset-bottom, 0px));
+  right: calc(6px + env(safe-area-inset-right, 0px));
   z-index: 40;
   width: 38px;
   height: 38px;

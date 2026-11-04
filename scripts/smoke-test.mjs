@@ -45,7 +45,7 @@ for (const a of assets) {
 ok("no unmatched asset refs", assets.length >= 15, `${assets.length} assets referenced`);
 
 const ext = [...new Set([...html.matchAll(/https?:\/\/[a-z0-9.-]+/gi)].map(m => m[0]))];
-const banned = ext.filter(u => !/(localhost|wave-dash\.app|twitter\.com)/.test(u));
+const banned = ext.filter(u => !/(localhost|wave-dash\.app|twitter\.com|github\.com)/.test(u));
 ok("no external runtime hosts in game html", banned.length === 0, ext.join(", ") || "none");
 
 for (const route of ["/", "/og.png", "/icon.svg", "/robots.txt", "/sitemap.xml"]) {
@@ -274,7 +274,6 @@ if (!browserExe) {
         ["icon-kit", "btn-open-icon-kit", "icon-kit-modal"],
         ["daily", "btn-open-daily", "daily-modal"],
         ["scores", "btn-open-scores", "scores-modal"],
-        ["leaderboard", "btn-open-changelog", "changelog-modal"],
         ["credits", "btn-open-credits", "credits-modal"],
         ["settings", "btn-open-settings", "settings-modal"],
         ["editor", "btn-open-editor", "editor-modal"],
@@ -296,6 +295,82 @@ if (!browserExe) {
         }
       }
       ok("all dialogs open via button + close via Escape", allDialogsOk, dialogDetails.join("; "));
+
+      // --- leaderboard login gate: click -> login required -> login -> board ---
+      phase("leaderboard login gate");
+      await E(`document.getElementById('btn-open-changelog').click()`);
+      await sleep(280);
+      const gateLogin = await dialogVisible("login-modal");
+      const gateBoardBlocked = await dialogVisible("changelog-modal");
+      ok("leaderboard click (logged out) opens login prompt", !!gateLogin && !gateBoardBlocked,
+        `login=${gateLogin} board=${gateBoardBlocked}`);
+      await shot("06a-login-gate.png");
+      // short name -> inline error, modal stays open
+      await E(`(function(){ document.getElementById('login-name').value = 'A'; })()`);
+      await E(`document.getElementById('btn-login-submit').click()`);
+      await sleep(200);
+      const gateErr = await E(`!document.getElementById('login-error').classList.contains('hidden')`);
+      ok("short name rejected with inline error", !!gateErr && !!(await dialogVisible("login-modal")),
+        `error=${gateErr}`);
+      // valid name -> closes login, opens board, name shown, flag persisted
+      await E(`(function(){
+        document.getElementById('login-name').value = 'SmokeTester';
+        document.getElementById('btn-login-submit').click();
+      })()`);
+      await sleep(500);
+      const gateLoginGone = await dialogVisible("login-modal");
+      const gateBoardOpen = await dialogVisible("changelog-modal");
+      ok("valid name logs in and opens leaderboard", !gateLoginGone && !!gateBoardOpen,
+        `loginStuck=${gateLoginGone} board=${gateBoardOpen}`);
+      const boardUserTxt = await E(`document.getElementById('board-user').textContent`);
+      ok("board footer shows logged-in name", boardUserTxt === "SmokeTester", boardUserTxt);
+      const gateFlag = await E(`JSON.parse(localStorage.getItem('wd.save.v2')).isLoggedIn`);
+      ok("isLoggedIn persisted", gateFlag === true, String(gateFlag));
+      await shot("06b-leaderboard-logged-in.png");
+      // logout from the board footer
+      await E(`document.getElementById('btn-board-logout').click()`);
+      await sleep(300);
+      const gateBoardAfterLogout = await dialogVisible("changelog-modal");
+      const gateFlag2 = await E(`JSON.parse(localStorage.getItem('wd.save.v2')).isLoggedIn`);
+      ok("logout closes board and clears flag", !gateBoardAfterLogout && gateFlag2 === false,
+        `board=${gateBoardAfterLogout} flag=${gateFlag2}`);
+
+      // --- game options wiring: mode + wave size pickers actually work ---
+      phase("game options");
+      await E(`document.getElementById('mode-easy').click()`);
+      await sleep(200);
+      const modeSaved = await E(`JSON.parse(localStorage.getItem('wd.save.v2')).mode`);
+      const easyActive = await E(`(function(){ var b = document.getElementById('mode-easy'); return b.className.indexOf('bg-white') !== -1; })()`);
+      ok("difficulty picker persists + repaints", modeSaved === "easy" && !!easyActive,
+        `mode=${modeSaved} active=${easyActive}`);
+      await E(`document.getElementById('size-mini').click()`);
+      await sleep(200);
+      const sizeSaved = await E(`JSON.parse(localStorage.getItem('wd.save.v2')).waveSize`);
+      ok("wave size picker persists", sizeSaved === "mini", sizeSaved);
+      await E(`document.getElementById('mode-medium').click()`);
+      await E(`document.getElementById('size-normal').click()`);
+      await sleep(200);
+      const restored = await E(`(function(){ var s = JSON.parse(localStorage.getItem('wd.save.v2')); return s.mode + '/' + s.waveSize; })()`);
+      ok("options restored to defaults", restored === "medium/normal", restored);
+
+      // --- autoplay bot: no on-screen label; reveal + engine flag still work ---
+      phase("autoplay bot");
+      const noBadge = await E(`document.getElementById('bot-badge') === null`);
+      ok("no on-screen autoplay badge element", !!noBadge);
+      for (let i = 0; i < 3; i++) {
+        await send("Input.dispatchKeyEvent", { type: "keyDown", key: "Control", code: "Control", windowsVirtualKeyCode: 17 });
+        await send("Input.dispatchKeyEvent", { type: "keyUp", key: "Control", code: "Control", windowsVirtualKeyCode: 17 });
+      }
+      await sleep(300);
+      const rowRevealed = await E(`(function(){ var r = document.getElementById('autoplay-row'); return !!r && r.style.display !== 'none'; })()`);
+      ok("Ctrl x3 reveals hidden bot toggle", !!rowRevealed);
+      await E(`document.getElementById('toggle-autoplay-pause').click()`);
+      await sleep(200);
+      const botOn = await E(`WD.engine.bot.enabled === true`);
+      await E(`document.getElementById('toggle-autoplay-pause').click()`);
+      await sleep(150);
+      const botOff = await E(`WD.engine.bot.enabled === false`);
+      ok("bot toggle drives engine flag", botOn && botOff, `on=${botOn} off=${botOff}`);
 
       // --- full run: Space -> fly -> die -> game-over -> Escape ---
       phase("full run");
@@ -342,7 +417,7 @@ if (!browserExe) {
       await E(`document.getElementById('btn-open-scores').click()`);
       await sleep(300);
       const boardHasScore = await E(`(document.getElementById('scores-modal') || {}).innerText?.includes('150')`);
-      ok("leaderboard renders recorded score", !!boardHasScore, `board contains 150: ${boardHasScore}`);
+      ok("past scores renders recorded score", !!boardHasScore, `scores modal contains 150: ${boardHasScore}`);
       await shot("05-leaderboard.png");
       await send("Input.dispatchKeyEvent", { type: "keyDown", key: "Escape", code: "Escape", windowsVirtualKeyCode: 27 });
       await sleep(200);
@@ -374,6 +449,69 @@ if (!browserExe) {
       const save3 = await E(`JSON.parse(localStorage.getItem('wd.save.v2'))`);
       ok("save survives reload", !!save3 && save3.version === 2 && save3.attempts >= (save1?.attempts ?? 0),
           `attempts=${save3?.attempts}`);
+
+      // --- mobile layout: 390x844 viewport, nothing overflows, everything fits ---
+      phase("mobile layout (390x844)");
+      await send("Emulation.setDeviceMetricsOverride", {
+        width: 390, height: 844, deviceScaleFactor: 2, mobile: true,
+      });
+      await sleep(600);
+      ctx = await getContext();
+      const mob = JSON.parse(await E(`(function(){
+        var w = window.innerWidth;
+        function r(id){ var el = document.getElementById(id); if (!el) return null;
+          var b = el.getBoundingClientRect(); return { left: b.left, right: b.right, width: b.width, top: b.top, bottom: b.bottom }; }
+        return JSON.stringify({
+          w: w,
+          center: r('center-row'),
+          quick: r('quick-actions'),
+          title: r('title'),
+          scrollW: document.documentElement.scrollWidth,
+          docW: document.documentElement.clientWidth
+        });
+      })()`));
+      ok("center buttons fit phone width", mob.center && mob.center.left >= -2 && mob.center.right <= mob.w + 2,
+        `left=${mob.center?.left?.toFixed?.(1)} right=${mob.center?.right?.toFixed?.(1)} w=${mob.w}`);
+      ok("bottom actions fit phone width", mob.quick && mob.quick.left >= -2 && mob.quick.right <= mob.w + 2,
+        `left=${mob.quick?.left?.toFixed?.(1)} right=${mob.quick?.right?.toFixed?.(1)}`);
+      ok("title fits phone width", mob.title && mob.title.left >= -2 && mob.title.right <= mob.w + 2,
+        `left=${mob.title?.left?.toFixed?.(1)} right=${mob.title?.right?.toFixed?.(1)}`);
+      ok("no horizontal overflow on phone", mob.scrollW <= mob.w + 2, `scrollW=${mob.scrollW} w=${mob.w}`);
+      await shot("08-mobile-menu-390.png");
+      // gameplay HUD placement while playing at phone size
+      await send("Input.dispatchKeyEvent", { type: "keyDown", key: " ", code: "Space", windowsVirtualKeyCode: 32 });
+      await sleep(250);
+      await send("Input.dispatchKeyEvent", { type: "keyUp", key: " ", code: "Space", windowsVirtualKeyCode: 32 });
+      await sleep(400);
+      const hud = JSON.parse(await E(`(function(){
+        function r(id){ var el = document.getElementById(id); if (!el) return null;
+          var b = el.getBoundingClientRect(); return { left: b.left, right: b.right, top: b.top }; }
+        return JSON.stringify({ w: window.innerWidth, score: r('hud-score'), pause: r('pause-btn-container') });
+      })()`));
+      ok("HUD fits inside phone viewport", hud.score && hud.pause
+        && hud.score.left >= -2 && hud.score.right <= hud.w + 2
+        && hud.pause.left >= -2 && hud.pause.top >= -2,
+        `score.left=${hud.score?.left?.toFixed?.(1)} score.right=${hud.score?.right?.toFixed?.(1)} pause.left=${hud.pause?.left?.toFixed?.(1)}`
+      );
+      await shot("09-mobile-run-390.png");
+      await send("Input.dispatchKeyEvent", { type: "keyDown", key: "Escape", code: "Escape", windowsVirtualKeyCode: 27 });
+      await sleep(150);
+      await send("Input.dispatchKeyEvent", { type: "keyUp", key: "Escape", code: "Escape", windowsVirtualKeyCode: 27 });
+      await sleep(300);
+      const mobilePlaying = await E(`WD.engine.isPaused ? WD.engine.isPaused() : false`);
+      // pause state surfaced via overlay; either way, exit to menu cleanly:
+      if (mobilePlaying) {
+        await E(`document.getElementById('quit-to-menu-btn') && document.getElementById('quit-to-menu-btn').click()`);
+        await sleep(500);
+      } else {
+        await send("Input.dispatchKeyEvent", { type: "keyDown", key: "Escape", code: "Escape", windowsVirtualKeyCode: 27 });
+        await send("Input.dispatchKeyEvent", { type: "keyUp", key: "Escape", code: "Escape", windowsVirtualKeyCode: 27 });
+        await sleep(300);
+      }
+      const backToMenuM = await E(`WD.engine.isPlaying() === false`);
+      ok("mobile run exits cleanly", backToMenuM, String(backToMenuM));
+      await send("Emulation.clearDeviceMetricsOverride");
+      await sleep(400);
     } catch (err) {
       ok("interaction flow completed", false, err.message);
     }

@@ -1,6 +1,6 @@
 {
   "name": "wave-dash-clone",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "private": true,
   "description": "Wave Dash — production-ready one-button canvas wave game (Next.js 16 shell + self-contained game)",
   "license": "MIT",
@@ -10,6 +10,7 @@
   "scripts": {
     "dev": "next dev",
     "build:css": "tailwindcss -c tailwind.config.js -i ./src/game.tailwind.css -o ./public/assets/css/game.css --minify",
+    "build:music": "node scripts/generate-music.mjs",
     "predev": "npm run build:css",
     "prebuild": "npm run build:css",
     "build": "next build",

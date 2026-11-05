@@ -27,7 +27,7 @@
     img,button,a{-webkit-touch-callout:none;}
     #ui-layer{padding-top:calc(2rem + var(--sa-t));padding-right:calc(2rem + var(--sa-r));padding-bottom:calc(2rem + var(--sa-b));padding-left:calc(2rem + var(--sa-l));}
     #hud-score{top:calc(2rem + var(--sa-t));right:calc(2rem + var(--sa-r));}
-    #best-display{top:calc(6rem + var(--sa-t));right:calc(2rem + var(--sa-r));}
+    #best-display{top:calc(5.5rem + var(--sa-t));right:calc(2rem + var(--sa-r));}
     #cps-display{top:calc(9rem + var(--sa-t));right:calc(2rem + var(--sa-r));}
     #pause-btn-container{top:calc(2rem + var(--sa-t));left:calc(2rem + var(--sa-l));}
     #attempt-label{top:calc(2rem + var(--sa-t));}
@@ -44,6 +44,11 @@
     #attempt-label,#custom-badge{animation:wd-badge-in .35s ease-out;}
     @keyframes wd-badge-in{from{opacity:0;transform:translate(-50%,-6px);}to{opacity:1;transform:translate(-50%,0);}}
     #btn-claim-daily{transition:transform .15s ease;}
+    /* Glitter / exclusive trail color swatches (shine animation) */
+    .wd-glitter{position:relative;overflow:hidden;isolation:isolate;}
+    .wd-glitter::after{content:'';position:absolute;inset:-25% -40%;background:linear-gradient(115deg,transparent 34%,rgba(255,255,255,.85) 46%,rgba(255,255,255,.25) 53%,transparent 66%);animation:wd-shimmer 1.5s linear infinite;pointer-events:none;}
+    @keyframes wd-shimmer{0%{transform:translateX(-110%) rotate(8deg);}100%{transform:translateX(110%) rotate(8deg);}}
+    @media (prefers-reduced-motion: reduce){.wd-glitter::after{animation:none;}}
     @media (max-width: 639px) {
       html, body { max-width: 100% !important; overflow-x: hidden !important; }
       #root { max-width: 100% !important; }
@@ -75,9 +80,9 @@
     <span class="text-base sm:text-lg text-neutral-500 font-medium tracking-wide uppercase">Score</span>
     <span id="score-display" class="text-3xl sm:text-4xl font-semibold tracking-tight text-white tabular-nums drop-shadow-md transition-transform duration-100">0</span>
   </div>
-  <div id="hud-best" class="hidden absolute top-24 right-8 z-20 flex items-center gap-2 text-sm font-medium tracking-wide text-neutral-500 uppercase tabular-nums">
+  <div id="best-display" class="absolute top-[5.5rem] right-8 z-20 flex items-center gap-2 text-xs sm:text-sm font-medium tracking-wide text-neutral-500 uppercase tabular-nums">
     <i data-lucide="crown" class="w-4 h-4 text-amber-400"></i>
-    Best <span id="hud-best-value" class="text-white">0</span>
+    Best <span id="best-value" class="text-white">0</span>
   </div>
   <div id="cps-display" class="hidden absolute top-36 right-8 z-20 text-sm font-medium tracking-wide text-neutral-500 uppercase tabular-nums">
     CPS <span id="cps-value" class="text-white">0</span>
@@ -122,7 +127,6 @@
         <i data-lucide="play" class="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 fill-neutral-950 text-neutral-950 translate-x-1 transition-transform group-hover:translate-x-2"></i>
         <span class="sr-only">Start Game</span>
         <span id="subtitle" class="absolute -bottom-10 text-[10px] sm:text-xs font-medium text-neutral-500 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-md pointer-events-none">Press Space or Click</span>
-        <span id="best-badge" class="hidden absolute -bottom-[4.5rem] left-1/2 -translate-x-1/2 text-[10px] sm:text-xs font-semibold tracking-[0.25em] text-neutral-500 uppercase whitespace-nowrap pointer-events-none">Best <span id="best-badge-value">0</span></span>
       </button>
 
       <!-- Pattern Editor Button -->
@@ -184,14 +188,16 @@
         <!-- Mode & Size Selectors -->
         <div class="flex flex-col items-end gap-3 sm:gap-4 w-full">
           <span class="text-[10px] sm:text-xs font-medium tracking-wide text-neutral-500 uppercase opacity-60 mb-1">Game Options</span>
-          <div id="mode-selector" class="inline-flex items-center justify-center gap-1.5 sm:gap-2 bg-neutral-900/80 p-1 sm:p-1.5 rounded-xl border border-neutral-700 backdrop-blur-md shadow-inner w-full sm:w-auto" role="group" aria-label="Difficulty">
-            <button id="mode-easy" class="wd-focusable px-3 py-1.5 sm:px-4 sm:py-2 rounded-md bg-neutral-800 text-neutral-400 border border-neutral-700 hover:text-white transition-colors text-xs sm:text-sm cursor-pointer">Easy</button>
-            <button id="mode-medium" class="wd-focusable px-3 py-1.5 sm:px-4 sm:py-2 rounded-md bg-white text-neutral-950 font-medium border border-white transition-colors text-xs sm:text-sm cursor-pointer">Medium</button>
-            <button id="mode-hard" class="wd-focusable px-3 py-1.5 sm:px-4 sm:py-2 rounded-md bg-neutral-800 text-neutral-400 border border-neutral-700 hover:text-white transition-colors text-xs sm:text-sm cursor-pointer">Hard</button>
-          </div>
-          <div id="size-selector" class="inline-flex items-center justify-center gap-1.5 sm:gap-2 bg-neutral-900/80 p-1 sm:p-1.5 rounded-xl border border-neutral-700 backdrop-blur-md shadow-inner w-full sm:w-auto mt-2 sm:mt-0" role="group" aria-label="Wave size">
-            <button id="size-normal" class="wd-focusable px-3 py-1.5 sm:px-4 sm:py-2 rounded-md bg-white text-neutral-950 font-medium border border-white transition-colors text-xs sm:text-sm cursor-pointer">Normal</button>
-            <button id="size-mini" class="wd-focusable px-3 py-1.5 sm:px-4 sm:py-2 rounded-md bg-neutral-800 text-neutral-400 border border-neutral-700 hover:text-white transition-colors text-xs sm:text-sm cursor-pointer">Mini</button>
+          <div class="flex flex-col items-end gap-2">
+            <div id="mode-selector" class="inline-flex items-stretch justify-center gap-1 w-40 sm:w-44 bg-neutral-900/80 p-1 sm:p-1.5 rounded-xl border border-neutral-700 backdrop-blur-md shadow-inner" role="group" aria-label="Difficulty">
+              <button id="mode-easy" class="wd-focusable flex-1 px-2 py-1.5 sm:py-2 rounded-md bg-neutral-800 text-neutral-400 border border-neutral-700 hover:text-white transition-colors text-xs sm:text-sm cursor-pointer">Easy</button>
+              <button id="mode-medium" class="wd-focusable flex-1 px-2 py-1.5 sm:py-2 rounded-md bg-white text-neutral-950 font-medium border border-white transition-colors text-xs sm:text-sm cursor-pointer">Medium</button>
+              <button id="mode-hard" class="wd-focusable flex-1 px-2 py-1.5 sm:py-2 rounded-md bg-neutral-800 text-neutral-400 border border-neutral-700 hover:text-white transition-colors text-xs sm:text-sm cursor-pointer">Hard</button>
+            </div>
+            <div id="size-selector" class="inline-flex items-stretch justify-center gap-1 w-40 sm:w-44 bg-neutral-900/80 p-1 sm:p-1.5 rounded-xl border border-neutral-700 backdrop-blur-md shadow-inner" role="group" aria-label="Wave size">
+              <button id="size-normal" class="wd-focusable flex-1 px-2 py-1.5 sm:py-2 rounded-md bg-white text-neutral-950 font-medium border border-white transition-colors text-xs sm:text-sm cursor-pointer">Normal</button>
+              <button id="size-mini" class="wd-focusable flex-1 px-2 py-1.5 sm:py-2 rounded-md bg-neutral-800 text-neutral-400 border border-neutral-700 hover:text-white transition-colors text-xs sm:text-sm cursor-pointer">Mini</button>
+            </div>
           </div>
         </div>
       </div>
@@ -269,10 +275,10 @@
             <button data-color="#f7b86d" aria-label="Orange trail" class="wd-focusable w-11 h-11 rounded-full ring-1 ring-white/10 border-[3px] border-transparent bg-[#f7b86d] shadow-[0_0_20px_-5px_#f7b86d] transition-all hover:scale-110 cursor-pointer"></button>
           </div>
           <div class="flex flex-wrap items-center justify-center gap-4 mb-4">
-            <span class="text-[10px] uppercase tracking-wider text-neutral-500 block w-full text-center mb-2">Earned trail colors (glitery)</span>
+            <span class="text-[10px] uppercase tracking-wider text-neutral-500 block w-full text-center mb-2">Earned trail colors</span>
             <div id="earned-color-swatch" class="flex flex-wrap items-center justify-center gap-2"></div>
           </div>
-          <p class="text-[11px] text-neutral-500 mt-2">Unlock unique glitery trail colors by reaching score milestones — 5 / 15 / 30 / 50 / 75 / 100.</p>
+          <p class="text-[11px] text-neutral-500 mt-2">Unlock unique trail colors by reaching score milestones — 5 / 15 / 30 / 50 / 75 / 100.</p>
         </div>
         <button id="btn-close-icon-kit" class="wd-focusable px-8 py-3 rounded-full bg-white text-neutral-950 font-medium text-lg hover:bg-neutral-200 active:scale-95 transition-all shadow-[0_0_20px_-5px_rgba(255,255,255,0.3)] cursor-pointer">Done</button>
       </div>
@@ -440,21 +446,36 @@
 
     <!-- Daily Reward Modal -->
     <div id="daily-modal" class="wd-guard hidden absolute inset-0 z-[60] flex flex-col items-center justify-center bg-neutral-950/95 backdrop-blur-md transition-opacity" role="dialog" aria-modal="true" aria-label="Daily reward">
-      <div class="text-center w-full max-w-lg px-8 flex flex-col items-center">
-        <h2 class="text-4xl font-semibold tracking-tight text-white mb-4 drop-shadow-md">Daily Reward</h2>
-        <div class="flex items-center gap-2 text-sm text-neutral-400 mb-6">
+      <div class="text-center w-full max-w-lg px-6 sm:px-8 flex flex-col items-center max-h-[94vh] overflow-y-auto py-4">
+        <h2 class="text-3xl sm:text-4xl font-semibold tracking-tight text-white mb-3 drop-shadow-md">Daily Reward</h2>
+        <div class="flex items-center gap-2 text-xs sm:text-sm text-neutral-400 mb-4 bg-neutral-900/70 border border-neutral-800 rounded-full px-4 py-1.5">
           <i data-lucide="flame" class="w-4 h-4 text-orange-400"></i>
-          <span><span id="daily-streak-value" class="text-white font-semibold">0</span>-day streak</span>
+          <span><span id="daily-streak-value" class="text-white font-bold">0</span>-day streak</span>
         </div>
-        <div id="daily-calendar" class="grid grid-cols-7 gap-2 mb-5 w-full"></div>
-        <div id="daily-streak-preview" class="w-full text-left mb-6"></div>
-        <div class="w-full text-left mb-6">
-          <h3 class="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-400 mb-3">Daily Icons</h3>
+
+        <div class="w-full text-left mb-4">
+          <h3 class="text-[10px] sm:text-xs font-semibold uppercase tracking-[0.2em] text-neutral-400 mb-2 flex items-center justify-between">
+            <span>Daily Icons</span>
+            <span id="daily-icon-progress" class="text-neutral-600 normal-case tracking-normal text-[10px]">0/4 unlocked</span>
+          </h3>
           <div id="daily-icon-strip" class="flex flex-wrap items-center gap-2"></div>
         </div>
-        <p id="daily-note" class="text-xs text-neutral-500 mb-6">Come back every day to unlock exclusive wave colors. Miss a day and the streak resets!</p>
+
+        <div class="w-full text-left mb-4 bg-neutral-900/60 border border-neutral-800/80 rounded-2xl px-4 py-4 shadow-lg">
+          <h3 class="text-[10px] sm:text-xs font-semibold uppercase tracking-[0.2em] text-neutral-400 mb-3 flex items-center gap-2">
+            <i data-lucide="flame" class="w-4 h-4 text-orange-400"></i> 7-Day Streak Roadmap
+          </h3>
+          <ul id="daily-streak-roadmap" class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 text-[11px] sm:text-xs text-neutral-300"></ul>
+        </div>
+
+        <div class="w-full text-left mb-4">
+          <h3 class="text-[10px] sm:text-xs font-semibold uppercase tracking-[0.2em] text-neutral-400 mb-2">Unlocked Trail Colors</h3>
+          <div id="daily-color-strip" class="flex flex-wrap items-center gap-2"></div>
+        </div>
+
+        <p id="daily-note" class="text-[11px] sm:text-xs text-neutral-500 mb-4 max-w-md">Claim every day — every gift unlocks a new icon first, then exclusive trail colors. A 7-day streak grants the exclusive Aurora Star glitter!</p>
         <button id="btn-claim-daily" class="wd-focusable px-10 py-4 rounded-full bg-white text-neutral-950 font-bold text-lg hover:bg-neutral-200 hover:scale-[1.03] active:scale-95 transition-all shadow-[0_0_50px_-10px_rgba(255,255,255,0.6)] cursor-pointer">Claim today&rsquo;s gift</button>
-        <button id="btn-close-daily" class="wd-focusable mt-4 px-6 py-2.5 rounded-xl bg-neutral-900/80 text-neutral-300 font-medium border border-neutral-800 hover:bg-neutral-800 hover:text-white transition-all cursor-pointer">Close</button>
+        <button id="btn-close-daily" class="wd-focusable mt-3 px-6 py-2 rounded-xl bg-neutral-900/80 text-neutral-300 font-medium border border-neutral-800 hover:bg-neutral-800 hover:text-white transition-all cursor-pointer">Close</button>
       </div>
     </div>
 
@@ -573,6 +594,20 @@
         { c: '#3a86ff', n: 'Cobalt' },
         { c: '#ff4d00', n: 'Ember' }
       ];
+      /* Exclusive Glitter trail colors — earned only by score milestones. Fully prismatic, sparkle as you fly. */
+      var GLITTER_COLORS = [
+        { c: '#ffe66d', n: 'Thunder Gold' },
+        { c: '#00e5ff', n: 'Ion Cyan' },
+        { c: '#ea80fc', n: 'Vio Spark' },
+        { c: '#69f0ae', n: 'Jade Glow' },
+        { c: '#ff5252', n: 'Ruby Rush' },
+        { c: '#b388ff', n: 'Nebula Prism' }
+      ];
+      var GLITTER_SET = GLITTER_COLORS.map(function (g) { return g.c.toLowerCase(); });
+      function isGlitterHex(hex) { return GLITTER_SET.indexOf(String(hex).toLowerCase()) !== -1; }
+      /* 7-day streak exclusive reward */
+      var STREAK_REWARD = { c: '#f8f8ff', n: 'Aurora Star' };
+      GLITTER_SET.push('#f8f8ff');
 
       var NAME_PART_A = ['Nova','Blaze','Turbo','Cosmic','Neon','Shadow','Frost','Thunder','Pixel','Ghost','Iron','Crimson','Silver','Rapid','Mystic','Electric'];
       var NAME_PART_B = ['Rider','Dash','Wave','Surfer','Pilot','Runner','Glider','Storm','Wolf','Falcon','Tiger','Bolt','Drift','Vortex','Blade','Comet'];
@@ -602,14 +637,14 @@
         { icon: 'spaceship', score: 150 }
       ];
       var DAILY_ICON_POOL = ['tree', 'respirator', 'robot', 'minimalistArrow'];
-      /* Level-based unique trail colors (unlock after best score milestones) */
+      /* Exclusive GLITTER trail colors (unlock at best-score milestones) */
       var LEVEL_COLOR_MILESTONES = [
-        { c: '#00f5d4', n: 'Aqua Neon', score: 5 },
-        { c: '#ff006e', n: 'Magenta Pop', score: 15 },
-        { c: '#ffd60a', n: 'Solar', score: 30 },
-        { c: '#9b5de5', n: 'Amethyst', score: 50 },
-        { c: '#3a86ff', n: 'Cobalt', score: 75 },
-        { c: '#ff4d00', n: 'Ember', score: 100 }
+        { c: '#ffe66d', n: 'Thunder Gold', score: 5 },
+        { c: '#00e5ff', n: 'Ion Cyan', score: 15 },
+        { c: '#ea80fc', n: 'Vio Spark', score: 30 },
+        { c: '#69f0ae', n: 'Jade Glow', score: 50 },
+        { c: '#ff5252', n: 'Ruby Rush', score: 75 },
+        { c: '#b388ff', n: 'Nebula Prism', score: 100 }
       ];
 
       function defaultSave() {
@@ -620,7 +655,6 @@
           icon: 'wave',
           colors: { c1: '#ffffff', c2: '#000000', theme: '#ffffff' },
           unlockedColors: [],
-          gliteryColors: [],
           unlockedIcons: ['wave'],
           mode: 'medium',
           waveSize: 'normal',
@@ -658,8 +692,6 @@
         d.pastScores = d.pastScores.filter(function (n) { return typeof n === 'number' && isFinite(n) && n >= 0; }).slice(0, 100);
         if (!Array.isArray(d.unlockedColors)) d.unlockedColors = [];
         d.unlockedColors = d.unlockedColors.filter(function (n) { return typeof n === 'string' && /^#[0-9a-fA-F]{3,8}$/.test(n); });
-        if (!Array.isArray(d.gliteryColors)) d.gliteryColors = [];
-        d.gliteryColors = d.gliteryColors.filter(function (n) { return typeof n === 'string' && /^#[0-9a-fA-F]{3,8}$/.test(n); });
         if (!Array.isArray(d.unlockedIcons)) d.unlockedIcons = [];
         d.unlockedIcons = d.unlockedIcons.filter(function (n) { return typeof n === 'string' && !!ICON_LABELS[n]; });
         if (d.unlockedIcons.indexOf('wave') === -1) d.unlockedIcons.unshift('wave');
@@ -736,9 +768,9 @@
         });
         if (!newly.length) return;
         newly.forEach(function (m) { s.unlockedIcons.push(m.icon); });
-        /* Level-based unique trail colors — these become GLITERY (sparkle) colors from gameplay */
+        /* Level-based unique trail colors */
         LEVEL_COLOR_MILESTONES.forEach(function (m) {
-          if (target >= m.score && s.gliteryColors.indexOf(m.c) === -1) s.gliteryColors.push(m.c);
+          if (target >= m.score && s.unlockedColors.indexOf(m.c) === -1) s.unlockedColors.push(m.c);
         });
         persist();
         newly.forEach(function (m, i) {
@@ -750,9 +782,9 @@
         });
         /* Toast level colors */
         LEVEL_COLOR_MILESTONES.forEach(function (m, i) {
-          if (target >= m.score && s.gliteryColors.indexOf(m.c) !== -1) {
+          if (target >= m.score && s.unlockedColors.indexOf(m.c) !== -1) {
             setTimeout(function () {
-              toast('Glitery trail color unlocked: ' + m.n, 'good');
+              toast('Trail color unlocked: ' + m.n, 'good');
               sfx('gift');
               try { window.dispatchEvent(new CustomEvent('wd-colors-changed', { detail: { color: m.c } })); } catch (e) {}
             }, (newly.length + i) * 450);
@@ -835,7 +867,10 @@
         ICON_LABELS: ICON_LABELS,
         ICON_MILESTONES: ICON_MILESTONES,
         DAILY_ICON_POOL: DAILY_ICON_POOL,
+        GLITTER_COLORS: GLITTER_COLORS,
+        STREAK_REWARD: STREAK_REWARD,
         LEVEL_COLOR_MILESTONES: LEVEL_COLOR_MILESTONES,
+        isGlitterHex: isGlitterHex,
         checkIconMilestones: checkIconMilestones,
         store: store,
         persist: persist,
@@ -878,10 +913,8 @@
       var menuMusic = document.getElementById('menu-music');
       var deathSfx = document.getElementById('death-sfx');
 
-      var bestDisplay = document.getElementById('hud-best');
-      var bestValue = document.getElementById('hud-best-value');
-      var bestBadge = document.getElementById('best-badge');
-      var bestBadgeValue = document.getElementById('best-badge-value');
+      var bestDisplay = document.getElementById('best-display');
+      var bestValue = document.getElementById('best-value');
       var attemptLabel = document.getElementById('attempt-label');
       var customBadge = document.getElementById('custom-badge');
       var hintLabel = document.getElementById('hint-label');
@@ -985,7 +1018,7 @@
       var obstacles = [];
       var trail = [];
       var particles = [];
-      var trailSparkles = [];
+      var sparkles = []; /* glitter-trail sparkle emitter */
       var runPattern = null;
       var patternIdx = 0;
 
@@ -1051,9 +1084,7 @@
       function updateMenuBest() {
         var best = WD.store.best;
         bestValue.textContent = best;
-        bestBadgeValue.textContent = best;
-        bestBadge.classList.toggle('hidden', best <= 0);
-        /* best-display is HUD-only; controlled in initGame/quitToMenu */
+        bestDisplay.classList.remove('hidden');
       }
       updateMenuBest();
 
@@ -1095,7 +1126,7 @@
         obstacles = [];
         trail = [];
         particles = [];
-        trailSparkles = [];
+        sparkles = [];
         score = 0;
         frameCount = 0;
 
@@ -1236,7 +1267,7 @@
         obstacles = [];
         trail = [];
         particles = [];
-        trailSparkles = [];
+        sparkles = [];
         score = 0;
         frameCount = 0;
         applyDifficulty();
@@ -1245,7 +1276,6 @@
         player.angle = Math.PI / 2;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         updateMenuBest();
-        bestDisplay.classList.add('hidden');
 
         bgMusic.pause();
         try { bgMusic.currentTime = 0; } catch (e) {}
@@ -1479,39 +1509,43 @@
           ctx.stroke();
         }
 
-        /* Glitery sparkle effect for gameplay-earned trail colors */
-        var isGlitery = S.gliteryColors.indexOf(themeColor) !== -1;
-        if (isGlitery) {
-          /* Add new sparkles along the trail */
-          if (Math.random() < 0.25) {
-            var idx = Math.floor(Math.random() * trail.length);
-            var tp = trail[idx];
-            trailSparkles.push({
-              x: tp.x, y: tp.y,
-              vx: (Math.random() - 0.5) * 2, vy: (Math.random() - 0.5) * 2,
-              life: 1.0, size: Math.random() * 3 + 1, color: themeColor
-            });
-          }
-          /* Draw existing sparkles */
-          for (var k = trailSparkles.length - 1; k >= 0; k--) {
-            var sp = trailSparkles[k];
-            sp.x += sp.vx;
-            sp.y += sp.vy;
-            sp.life -= 0.05;
-            if (sp.life <= 0) { trailSparkles.splice(k, 1); continue; }
-            ctx.save();
-            ctx.globalAlpha = sp.life;
-            ctx.fillStyle = sp.color;
-            ctx.shadowColor = sp.color;
-            ctx.shadowBlur = 12;
-            ctx.beginPath();
-            ctx.arc(sp.x, sp.y, sp.size * sp.life, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.restore();
-          }
-        }
-
         ctx.restore();
+      }
+
+      /* Glitter trail sparkles — additive 4-point twinkles */
+      function drawSparkles() {
+        if (!sparkles.length) return;
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.lineCap = 'round';
+        for (var i = 0; i < sparkles.length; i++) {
+          var s = sparkles[i];
+          var tw = Math.sin(frameCount * 0.25 + s.seed) * 0.5 + 0.5; /* twinkle pulse */
+          var a = Math.max(0, Math.sin(s.life * Math.PI)) * (0.35 + 0.65 * tw);
+          var r = s.size * (0.7 + 0.6 * tw);
+          ctx.globalAlpha = a;
+          ctx.strokeStyle = '#ffffff';
+          ctx.shadowColor = themeColor;
+          ctx.shadowBlur = 8;
+          ctx.lineWidth = 1.4;
+          /* vertical ray */
+          ctx.beginPath();
+          ctx.moveTo(s.x, s.y - r * 2.2);
+          ctx.lineTo(s.x, s.y + r * 2.2);
+          ctx.stroke();
+          /* horizontal ray */
+          ctx.beginPath();
+          ctx.moveTo(s.x - r * 2.2, s.y);
+          ctx.lineTo(s.x + r * 2.2, s.y);
+          ctx.stroke();
+          /* core dot */
+          ctx.fillStyle = '#ffffff';
+          ctx.beginPath();
+          ctx.arc(s.x, s.y, r * 0.55, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+        ctx.globalAlpha = 1;
       }
 
       function drawParticles() {
@@ -1637,6 +1671,31 @@
         trail.push({ x: player.x, y: player.y });
         trail.forEach(function (t) { t.x -= activeForwardSpeed; });
 
+        /* Glitter trail: emit prismatic sparkles */
+        var glitterTrail = WD.isGlitterHex && WD.isGlitterHex(themeColor);
+        if (glitterTrail) {
+          if (frameCount % 2 === 0) {
+            for (var g = 0; g < 2; g++) {
+              sparkles.push({
+                x: player.x + (Math.random() - 0.5) * player.size * 1.6,
+                y: player.y + (Math.random() - 0.5) * player.size * 1.6,
+                vy: (Math.random() - 0.5) * 1.5,
+                life: 1,
+                size: 1.3 + Math.random() * 2.4,
+                seed: Math.random() * Math.PI * 2
+              });
+            }
+          }
+        }
+        for (var si = sparkles.length - 1; si >= 0; si--) {
+          var sp = sparkles[si];
+          sp.x -= activeForwardSpeed;
+          sp.y += sp.vy;
+          sp.life -= 0.016;
+          if (sp.life <= 0) sparkles.splice(si, 1);
+        }
+        if (sparkles.length > 130) sparkles.splice(0, sparkles.length - 130);
+
         var maxTrail = gameSettings.reduceLag ? 20 : 80;
         if (trail.length > maxTrail) trail.shift();
 
@@ -1729,6 +1788,7 @@
         } else {
           drawParticles();
         }
+        drawSparkles();
 
         if (gameSettings.showFPS) {
           framesCount++;
@@ -1990,23 +2050,56 @@
         refreshThemeSelection();
       }
 
+      function milestoneScoreFor(hex) {
+        var m = (WD.LEVEL_COLOR_MILESTONES || []).filter(function (x) { return String(x.c).toLowerCase() === hex; })[0];
+        return m ? m.score : null;
+      }
+
       function rebuildSpecialColors() {
         if (!colorSelector) return;
         Array.from(colorSelector.querySelectorAll('[data-special="1"]')).forEach(function (b) { b.remove(); });
         var customLabel = colorSelector.querySelector('label');
-        S.unlockedColors.forEach(function (hex) {
-          var known = WD.SPECIAL_COLORS.some(function (sc) { return sc.c.toLowerCase() === String(hex).toLowerCase(); });
-          if (!known) return;
-          var b = document.createElement('button');
-          b.setAttribute('data-color', hex.toLowerCase());
-          b.setAttribute('data-special', '1');
-          b.setAttribute('aria-label', 'Trail color ' + hex);
-          b.className = S_IDLE_BTN;
-          b.style.background = hex;
-          b.style.boxShadow = '0 0 20px -5px ' + hex;
+        var addSwatch = function (b) {
           if (customLabel) colorSelector.insertBefore(b, customLabel);
           else colorSelector.appendChild(b);
-        });
+        };
+        /* Renders one exclusive set: unlocked = sparkle swatch, locked = padlocked with hint */
+        var renderSet = function (list, kind) {
+          list.forEach(function (item) {
+            var hex = String(item.c).toLowerCase();
+            var unlocked = S.unlockedColors.some(function (c) { return String(c).toLowerCase() === hex; });
+            var isGlit = WD.isGlitterHex && WD.isGlitterHex(hex);
+            var hint = unlocked
+              ? 'Trail color ' + item.n + (isGlit ? ' — GLITTER' : ' — unlocked')
+              : (kind === 'score')
+                ? item.n + ' — reach ' + (milestoneScoreFor(hex) || '?') + '+ best score to unlock!'
+                : (kind === 'streak')
+                  ? item.n + ' — hold a 7-day Daily streak!'
+                  : item.n + ' — win it from the Daily Reward!';
+            var b = document.createElement('button');
+            b.setAttribute('data-special', '1');
+            b.setAttribute('aria-label', hint);
+            b.setAttribute('title', hint);
+            if (unlocked) {
+              b.setAttribute('data-color', hex);
+              b.className = S_IDLE_BTN + (isGlit ? ' wd-glitter' : '');
+              b.style.background = hex;
+              b.style.boxShadow = '0 0 18px -4px ' + hex;
+            } else {
+              b.setAttribute('data-locked-swatch', '1');
+              b.className = S_IDLE_BTN + ' opacity-40 grayscale cursor-not-allowed relative';
+              b.style.background = hex;
+              var badge = document.createElement('span');
+              badge.className = 'wd-lock-badge absolute top-0 right-0 w-5 h-5 rounded-full bg-neutral-950/90 border border-neutral-700 text-neutral-300 flex items-center justify-center z-10';
+              badge.innerHTML = LOCK_BADGE_SVG;
+              b.appendChild(badge);
+            }
+            addSwatch(b);
+          });
+        };
+        renderSet(WD.GLITTER_COLORS || [], 'score');
+        renderSet(WD.SPECIAL_COLORS || [], 'daily');
+        if (WD.STREAK_REWARD) renderSet([WD.STREAK_REWARD], 'streak');
         refreshThemeSelection();
       }
 
@@ -2014,38 +2107,25 @@
         var strip = $id('earned-color-swatch');
         if (!strip) return;
         strip.innerHTML = '';
-        LEVEL_COLOR_MILESTONES.forEach(function (m) {
-          var unlocked = S.gliteryColors.indexOf(m.c) !== -1;
-          var item = document.createElement('div');
-          item.className = 'flex flex-col items-center gap-1';
-          var tile = document.createElement('div');
-          tile.className = 'w-10 h-10 rounded-full border flex items-center justify-center relative ' +
-            (unlocked ? 'border-green-800/50 bg-neutral-900/70 shadow-[0_0_15px_-5px_' + m.c + ']' : 'border-neutral-800 bg-neutral-900/50') +
-            (unlocked ? ' cursor-pointer' : ' cursor-not-allowed');
-          if (unlocked) {
-            tile.style.background = m.c;
-            tile.style.boxShadow = '0 0 15px -5px ' + m.c;
-            tile.setAttribute('title', m.n + ' — unlocked (glitery trail)');
-          } else {
-            tile.style.background = 'transparent';
-            tile.style.boxShadow = 'none';
-            tile.setAttribute('title', colorLockHint(m.c));
-            var badge = document.createElement('span');
-            badge.className = 'wd-lock-badge absolute top-0 right-0 w-4 h-4 rounded-full bg-neutral-950/90 border border-neutral-700 text-neutral-300 flex items-center justify-center shadow-md z-10';
-            badge.innerHTML = LOCK_BADGE_SVG;
-            tile.appendChild(badge);
-          }
-          var label = document.createElement('span');
-          label.className = 'text-[9px] leading-tight text-center max-w-[3rem] truncate ' + (unlocked ? 'text-green-300' : 'text-neutral-500');
-          label.textContent = m.n;
-          item.appendChild(tile);
-          item.appendChild(label);
-          strip.appendChild(item);
+        S.unlockedColors.forEach(function (hex) {
+          var b = document.createElement('div');
+          var isGlit = WD.isGlitterHex && WD.isGlitterHex(hex);
+          b.className = 'w-8 h-8 rounded-full border border-white/10' + (isGlit ? ' wd-glitter' : '');
+          b.style.background = hex;
+          b.style.boxShadow = '0 0 15px -4px ' + hex;
+          b.setAttribute('title', hex + (isGlit ? ' (GLITTER)' : ''));
+          strip.appendChild(b);
         });
       }
 
       if (colorSelector) {
         colorSelector.addEventListener('click', function (e) {
+          var locked = e.target.closest ? e.target.closest('button[data-locked-swatch]') : null;
+          if (locked) {
+            WD.toast(locked.getAttribute('title') || 'Locked trail color!', 'bad');
+            WD.sfx('click');
+            return;
+          }
           var btn = e.target.closest ? e.target.closest('button[data-color]') : null;
           if (!btn) return;
           setThemeColor(btn.getAttribute('data-color'));
@@ -2118,13 +2198,6 @@
         if (m) return label + ' is locked — earn it with a ' + m.score + '+ score run!';
         if (WD.DAILY_ICON_POOL.indexOf(iconName) !== -1) return label + ' is locked — win it from the Daily Reward!';
         return label + ' is locked.';
-      }
-      function colorLockHint(colorHex) {
-        var m = WD.LEVEL_COLOR_MILESTONES.filter(function (x) { return x.c.toLowerCase() === String(colorHex).toLowerCase(); })[0];
-        if (m) return m.n + ' is locked — reach ' + m.score + '+ score to unlock (glitery trail)!';
-        var d = WD.SPECIAL_COLORS.filter(function (x) { return x.c.toLowerCase() === String(colorHex).toLowerCase(); })[0];
-        if (d) return d.n + ' is locked — win it from the Daily Reward!';
-        return colorHex + ' is locked.';
       }
       var LOCK_BADGE_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-2.5 h-2.5" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>';
       function refreshIconLocks() {
@@ -2411,8 +2484,10 @@
       var dailyDot = $id('daily-dot');
       var claimBtn = $id('btn-claim-daily');
       var streakValue = $id('daily-streak-value');
-      var dailyCalendar = $id('daily-calendar');
       var dailyNote = $id('daily-note');
+      var dailyProgress = $id('daily-icon-progress');
+      var streakRoadmap = $id('daily-streak-roadmap');
+      var dailyColorStrip = $id('daily-color-strip');
 
       function isClaimedToday() { return S.daily.lastClaim === WD.todayKey(0); }
 
@@ -2420,9 +2495,57 @@
         if (dailyDot) dailyDot.classList.toggle('hidden', isClaimedToday());
       }
 
+      /* 7-day streak roadmap — what unlocks on each day, with live checkmarks */
+      function renderStreakRoadmap() {
+        if (!streakRoadmap) return;
+        streakRoadmap.innerHTML = '';
+        var roadmap = [
+          { day: 1, label: 'Tree icon', kind: 'icon', ref: 'tree' },
+          { day: 2, label: 'Respirator icon', kind: 'icon', ref: 'respirator' },
+          { day: 3, label: 'Robot icon', kind: 'icon', ref: 'robot' },
+          { day: 4, label: 'Minimalist Arrow icon', kind: 'icon', ref: 'minimalistArrow' },
+          { day: 5, label: 'Cobalt trail color', kind: 'color', ref: '#3a86ff' },
+          { day: 6, label: 'Ember trail color', kind: 'color', ref: '#ff4d00' },
+          { day: 7, label: 'Aurora Star — exclusive glitter', kind: 'streak', ref: '#f8f8ff' }
+        ];
+        roadmap.forEach(function (step) {
+          var done = step.kind === 'icon'
+            ? S.unlockedIcons.indexOf(step.ref) !== -1
+            : S.unlockedColors.some(function (c) { return String(c).toLowerCase() === step.ref; });
+          var li = document.createElement('li');
+          li.className = 'flex items-center gap-2 rounded-lg border px-2 py-1.5 ' +
+            (done ? 'border-green-800/50 bg-neutral-900/70 text-green-300' : 'border-neutral-800 bg-neutral-900/40 text-neutral-500');
+          li.innerHTML = '<span class="w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold shrink-0 ' +
+            (done ? 'bg-green-500/20 text-green-400' : 'bg-neutral-800 text-neutral-500') + '">' +
+            (done ? '✓' : step.day) + '</span><span class="truncate">' + step.label + '</span>';
+          streakRoadmap.appendChild(li);
+        });
+      }
+
+      /* All unlockable daily trail colors (6 + 7-day exclusive), with locked state */
+      function renderDailyColorStrip() {
+        if (!dailyColorStrip) return;
+        dailyColorStrip.innerHTML = '';
+        var all = WD.SPECIAL_COLORS.concat([WD.STREAK_REWARD]);
+        all.forEach(function (item) {
+          var hex = item.c.toLowerCase();
+          var unlocked = S.unlockedColors.some(function (c) { return String(c).toLowerCase() === hex; });
+          var isGlit = WD.isGlitterHex && WD.isGlitterHex(hex);
+          var dot = document.createElement('div');
+          dot.className = 'w-9 h-9 rounded-full border flex items-center justify-center ' +
+            (unlocked ? 'border-green-800/60' + (isGlit ? ' wd-glitter' : '') : 'border-neutral-800 grayscale opacity-40');
+          dot.style.background = unlocked ? hex : 'transparent';
+          if (unlocked) dot.style.boxShadow = '0 0 12px -3px ' + hex;
+          dot.setAttribute('title', item.n + (unlocked ? ' — unlocked' : ' — locked'));
+          dailyColorStrip.appendChild(dot);
+        });
+      }
+
       function renderDaily() {
         refreshDailyDot();
-        if (streakValue) streakValue.textContent = String(S.daily.streak);
+        if (streakValue) streakValue.textContent = String(S.daily.streak || 0);
+        var owned = WD.DAILY_ICON_POOL.filter(function (n) { return S.unlockedIcons.indexOf(n) !== -1; }).length;
+        if (dailyProgress) dailyProgress.textContent = owned + '/' + WD.DAILY_ICON_POOL.length + ' unlocked';
         if (claimBtn) {
           var claimed = isClaimedToday();
           claimBtn.disabled = claimed;
@@ -2431,62 +2554,11 @@
           claimBtn.textContent = claimed ? 'Claimed — come back tomorrow!' : 'Claim today’s gift';
         }
         if (dailyNote) dailyNote.textContent = isClaimedToday()
-          ? 'Gift claimed today. Your streak keeps growing if you return tomorrow!'
-          : 'One gift per day — every claim unlocks a new icon first, then exclusive trail colors. Miss a day and the streak resets!';
-        if (!dailyCalendar) return;
-        dailyCalendar.innerHTML = '';
-        for (var i = 1; i <= 7; i++) {
-          var reward = WD.SPECIAL_COLORS[(i - 1) % 6];
-          var unlocked = S.unlockedColors.some(function (c) { return String(c).toLowerCase() === reward.c.toLowerCase(); });
-          var chip = document.createElement('div');
-          var nextChip = ((S.daily.streak % 7) + 1) === i && !isClaimedToday();
-          chip.className = 'rounded-xl border px-2 py-2 flex flex-col items-center gap-1 ' +
-            (unlocked ? 'border-green-800/50 bg-neutral-900/60' : 'border-neutral-800 bg-neutral-900/40') +
-            (nextChip ? ' ring-1 ring-rose-400/70' : '');
-          var swatch = document.createElement('div');
-          swatch.className = 'w-7 h-7 rounded-full border border-white/10';
-          swatch.style.background = unlocked ? reward.c : 'transparent';
-          var label = document.createElement('span');
-          label.className = 'text-[10px] uppercase tracking-wider ' + (unlocked ? 'text-green-300' : 'text-neutral-500');
-          label.textContent = unlocked ? 'Unlocked' : 'Day ' + i;
-          chip.appendChild(swatch);
-          chip.appendChild(label);
-          dailyCalendar.appendChild(chip);
-        }
+          ? 'Gift claimed today. Your streak keeps growing — day 7 grants the exclusive Aurora Star glitter!'
+          : 'One gift per day — every claim unlocks a new icon first, then trail colors. A 7-day streak grants the exclusive Aurora Star glitter!';
+        renderStreakRoadmap();
+        renderDailyColorStrip();
         renderDailyIconStrip();
-        renderDailyStreakPreview();
-      }
-
-      function renderDailyStreakPreview() {
-        var preview = $id('daily-streak-preview');
-        if (!preview) return;
-        preview.innerHTML = '';
-        var header = document.createElement('div');
-        header.className = 'text-[10px] uppercase tracking-wider text-neutral-500 block w-full text-center mb-2';
-        header.textContent = '7-Day Streak — what unlocks each day:';
-        preview.appendChild(header);
-        var row = document.createElement('div');
-        row.className = 'flex flex-wrap justify-center gap-2';
-        for (var i = 1; i <= 7; i++) {
-          var reward = WD.SPECIAL_COLORS[(i - 1) % 6];
-          var unlocked = S.unlockedColors.some(function (c) { return String(c).toLowerCase() === reward.c.toLowerCase(); });
-          var item = document.createElement('div');
-          item.className = 'flex flex-col items-center gap-1';
-          var tile = document.createElement('div');
-          tile.className = 'w-10 h-10 rounded-full border flex items-center justify-center ' +
-            (unlocked ? 'border-green-800/50 bg-neutral-900/70' : 'border-neutral-800 bg-neutral-900/50');
-          var swatch = document.createElement('div');
-          swatch.className = 'w-6 h-6 rounded-full border border-white/10';
-          swatch.style.background = unlocked ? reward.c : 'transparent';
-          tile.appendChild(swatch);
-          var label = document.createElement('span');
-          label.className = 'text-[9px] leading-tight text-center max-w-[2.5rem] truncate ' + (unlocked ? 'text-green-300' : 'text-neutral-500');
-          label.textContent = 'Day ' + i + ' — ' + reward.n;
-          item.appendChild(tile);
-          item.appendChild(label);
-          row.appendChild(item);
-        }
-        preview.appendChild(row);
       }
 
       function renderDailyIconStrip() {
@@ -2548,16 +2620,29 @@
             if (S.unlockedIcons.indexOf(ic) === -1) { S.unlockedIcons.push(ic); iconGranted = ic; break; }
           }
           if (colorNew) S.unlockedColors.push(reward.c);
+          /* 7-day streak exclusive — Aurora Star glitter color */
+          var streakRewardGranted = false;
+          if (streak >= 7 && !S.unlockedColors.some(function (c) { return String(c).toLowerCase() === WD.STREAK_REWARD.c.toLowerCase(); })) {
+            S.unlockedColors.push(WD.STREAK_REWARD.c);
+            streakRewardGranted = true;
+          }
           WD.persist();
           WD.sfx('gift');
-          if (iconGranted) {
+          if (streakRewardGranted) {
+            WD.toast('7-DAY STREAK! Aurora Star — exclusive glitter color unlocked!', 'good');
+            setTimeout(function () { WD.sfx('best'); }, 300);
+            setTimeout(function () {
+              if (iconGranted) WD.toast('Also unlocked ' + (WD.ICON_LABELS[iconGranted] || iconGranted) + ' icon!', 'good');
+              else if (colorNew) WD.toast('Also unlocked ' + reward.n + ' trail color!', 'good');
+            }, 500);
+          } else if (iconGranted) {
             WD.toast('New icon unlocked: ' + (WD.ICON_LABELS[iconGranted] || iconGranted) + '!', 'good');
             setTimeout(function () {
               if (colorNew) WD.toast('Also unlocked ' + reward.n + ' trail color!', 'good');
             }, 450);
           } else if (colorNew) {
             WD.toast('Unlocked ' + reward.n + ' trail color!', 'good');
-          } else if (S.unlockedColors.length >= 6 && S.unlockedIcons.length >= 5) {
+          } else if (S.unlockedColors.length >= 7 && S.unlockedIcons.length >= 5) {
             WD.toast('All rewards unlocked — streak ' + streak + '!', 'good');
           } else {
             WD.toast('Streak ' + streak + ' — keep it going!', 'good');

@@ -96,97 +96,105 @@
   </div>
 
   <!-- UI Overlay (Start Menu) -->
-  <div id="ui-layer" class="wd-guard absolute inset-0 z-30 transition-opacity duration-300 pointer-events-none flex flex-col justify-between p-8">
-    <!-- Top Row -->
-    <div class="flex justify-between items-start pointer-events-auto">
-      <div class="w-12"></div>
-      <div class="flex flex-col items-center mt-2">
-        <h1 id="title" class="text-5xl sm:text-7xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-b from-white to-neutral-400 drop-shadow-2xl uppercase text-center">
+  <div id="ui-layer" class="wd-guard absolute inset-0 z-30 transition-opacity duration-300 pointer-events-none flex flex-col justify-between p-6 sm:p-8">
+    <!-- Top Row: Title -->
+    <div class="flex justify-center items-start pointer-events-auto">
+      <div class="flex flex-col items-center mt-4 sm:mt-6">
+        <h1 id="title" class="text-5xl sm:text-6xl md:text-7xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-br from-white via-rose-400 to-neutral-400 drop-shadow-[0_0_40px_-10px_rgba(251,113,133,0.4)] uppercase text-center leading-tight">
           Wave Dash
         </h1>
+        <p class="mt-2 sm:mt-3 text-xs sm:text-sm text-neutral-500 uppercase tracking-wider font-medium opacity-70">
+          One-button neon wave rider
+        </p>
       </div>
-      <div class="w-12"></div>
     </div>
 
-    <!-- Center Row -->
-    <div id="center-row" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center gap-4 sm:gap-8 md:gap-12 pointer-events-auto">
+    <!-- Center Row: Play + Customize + Editor -->
+    <div id="center-row" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center gap-6 sm:gap-10 pointer-events-auto z-20">
       <!-- Customize Button -->
-      <button id="btn-open-icon-kit" aria-label="Customize your icon" title="Customize" class="wd-focusable relative group w-20 h-20 sm:w-28 sm:h-28 md:w-32 md:h-32 flex items-center justify-center rounded-[1.5rem] sm:rounded-[2rem] bg-neutral-900/80 backdrop-blur-md border border-neutral-800 shadow-xl hover:bg-neutral-800 hover:border-neutral-600 transition-all hover:-translate-y-1 cursor-pointer">
-        <i data-lucide="square-user" class="w-7 h-7 sm:w-10 sm:h-10 md:w-12 md:h-12 text-neutral-400 group-hover:text-white transition-colors"></i>
-        <span class="absolute -bottom-8 text-sm font-medium text-neutral-500 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none hidden sm:block">Customize</span>
+      <button id="btn-open-icon-kit" aria-label="Customize your icon" title="Customize" class="wd-focusable relative group w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 flex items-center justify-center rounded-[1.5rem] sm:rounded-[1.75rem] md:rounded-[2rem] bg-neutral-900/80 backdrop-blur-md border border-neutral-700 shadow-xl hover:bg-neutral-800 hover:border-neutral-500 hover:-translate-y-1 transition-all duration-300 cursor-pointer">
+        <i data-lucide="square-user" class="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-neutral-400 group-hover:text-white transition-colors"></i>
+        <span class="absolute -bottom-9 text-[10px] sm:text-xs font-medium text-neutral-500 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none hidden sm:block whitespace-nowrap">Customize</span>
       </button>
 
       <!-- Play Button -->
-      <button id="start-btn" aria-label="Start game" class="wd-focusable relative group w-28 h-28 sm:w-36 sm:h-36 md:w-44 md:h-44 flex items-center justify-center rounded-[2rem] sm:rounded-[2.5rem] bg-white shadow-[0_0_60px_-15px_rgba(255,255,255,0.4)] hover:bg-neutral-200 hover:scale-[1.03] active:scale-95 transition-all cursor-pointer">
-        <i data-lucide="play" class="w-10 h-10 sm:w-14 sm:h-14 md:w-16 md:h-16 fill-neutral-950 text-neutral-950 translate-x-1 transition-transform group-hover:scale-105"></i>
+      <button id="start-btn" aria-label="Start game" class="wd-focusable relative group w-32 h-32 sm:w-36 sm:h-36 md:w-44 md:h-44 flex items-center justify-center rounded-[2rem] sm:rounded-[2.25rem] md:rounded-[2.5rem] bg-white shadow-[0_0_50px_-15px_rgba(255,255,255,0.5)] hover:bg-neutral-100 hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer border border-white/40">
+        <i data-lucide="play" class="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 fill-neutral-950 text-neutral-950 translate-x-1 transition-transform group-hover:translate-x-2"></i>
         <span class="sr-only">Start Game</span>
-        <span id="subtitle" class="absolute -bottom-10 text-sm font-medium text-neutral-500 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-md pointer-events-none">Press Space or Click</span>
-        <span id="best-badge" class="hidden absolute -bottom-[4.2rem] left-1/2 -translate-x-1/2 text-xs font-semibold tracking-[0.25em] text-neutral-500 uppercase whitespace-nowrap pointer-events-none">Best <span id="best-badge-value">0</span></span>
+        <span id="subtitle" class="absolute -bottom-10 text-[10px] sm:text-xs font-medium text-neutral-500 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-md pointer-events-none">Press Space or Click</span>
+        <span id="best-badge" class="hidden absolute -bottom-[4.5rem] left-1/2 -translate-x-1/2 text-[10px] sm:text-xs font-semibold tracking-[0.25em] text-neutral-500 uppercase whitespace-nowrap pointer-events-none">Best <span id="best-badge-value">0</span></span>
       </button>
 
       <!-- Pattern Editor Button -->
-      <button id="btn-open-editor" aria-label="Open pattern editor" title="Pattern editor" class="wd-focusable relative group w-20 h-20 sm:w-28 sm:h-28 md:w-32 md:h-32 flex items-center justify-center rounded-[1.5rem] sm:rounded-[2rem] bg-neutral-900/80 backdrop-blur-md border border-neutral-800 shadow-xl hover:bg-neutral-800 hover:border-neutral-600 transition-all hover:-translate-y-1 cursor-pointer">
-        <i data-lucide="pen-tool" class="w-7 h-7 sm:w-10 sm:h-10 md:w-12 md:h-12 text-neutral-400 group-hover:text-white transition-colors"></i>
-        <span class="absolute -bottom-8 text-sm font-medium text-neutral-500 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none hidden sm:block">Editor</span>
+      <button id="btn-open-editor" aria-label="Open pattern editor" title="Pattern editor" class="wd-focusable relative group w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 flex items-center justify-center rounded-[1.5rem] sm:rounded-[1.75rem] md:rounded-[2rem] bg-neutral-900/80 backdrop-blur-md border border-neutral-700 shadow-xl hover:bg-neutral-800 hover:border-neutral-500 hover:-translate-y-1 transition-all duration-300 cursor-pointer">
+        <i data-lucide="pen-tool" class="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-neutral-400 group-hover:text-white transition-colors"></i>
+        <span class="absolute -bottom-9 text-[10px] sm:text-xs font-medium text-neutral-500 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none hidden sm:block whitespace-nowrap">Editor</span>
       </button>
     </div>
 
-    <!-- Bottom Row -->
-    <div class="flex flex-col items-center gap-2 sm:flex-row sm:justify-between sm:items-end pointer-events-auto w-full">
-      <!-- Profile / Socials -->
-      <div class="flex flex-col gap-3 sm:items-start">
-        <span id="player-name-label" class="text-base font-medium tracking-wide text-neutral-300 uppercase ml-1">Player 1</span>
-        <button id="btn-profile" aria-label="Open profile" title="Profile &amp; stats" class="wd-focusable w-14 h-14 md:w-16 md:h-16 rounded-full border border-neutral-700 bg-neutral-900/80 backdrop-blur-md flex items-center justify-center shadow-lg hover:border-neutral-500 transition-colors cursor-pointer">
-          <i data-lucide="user" class="text-neutral-400 w-6 h-6 md:w-8 md:h-8"></i>
-        </button>
+    <!-- Bottom Row: Left (Profile + Socials + Version) | Right (Quick actions + Mode/Size) -->
+    <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between w-full pointer-events-auto gap-4 sm:gap-6">
+      <!-- Left: Profile / Socials -->
+      <div class="flex flex-col items-center sm:items-start gap-3 sm:gap-4">
+        <div class="flex items-center gap-2 sm:gap-3">
+          <span id="player-name-label" class="hidden sm:block text-[10px] sm:text-xs font-medium tracking-wide text-neutral-500 uppercase opacity-60">Player 1</span>
+          <button id="btn-profile" aria-label="Open profile" title="Profile &amp; stats" class="wd-focusable w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full border border-neutral-700 bg-neutral-900/80 backdrop-blur-md flex items-center justify-center shadow-lg hover:border-neutral-500 transition-all duration-300 cursor-pointer">
+            <i data-lucide="user" class="text-neutral-400 w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8"></i>
+          </button>
+        </div>
         <div class="hidden sm:flex gap-2 mt-1">
-          <button id="btn-share-x" aria-label="Share your best score on X" title="Share on X" class="wd-focusable w-8 h-8 md:w-9 md:h-9 rounded-lg border border-neutral-800 bg-neutral-900/80 flex items-center justify-center hover:bg-neutral-800 transition-colors group cursor-pointer">
+          <button id="btn-share-x" aria-label="Share your best score on X" title="Share on X" class="wd-focusable w-8 h-8 sm:w-9 sm:h-9 rounded-lg border border-neutral-800 bg-neutral-900/80 flex items-center justify-center hover:bg-neutral-800 transition-colors group cursor-pointer">
             <svg viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4 text-neutral-500 group-hover:text-white transition-colors" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
           </button>
-          <button id="btn-share-ig" aria-label="Share the game (opens share sheet or copies link)" title="Share game" class="wd-focusable w-8 h-8 md:w-9 md:h-9 rounded-lg border border-neutral-800 bg-neutral-900/80 flex items-center justify-center hover:bg-neutral-800 transition-colors group cursor-pointer">
+          <button id="btn-share-ig" aria-label="Share the game (opens share sheet or copies link)" title="Share game" class="wd-focusable w-8 h-8 sm:w-9 sm:h-9 rounded-lg border border-neutral-800 bg-neutral-900/80 flex items-center justify-center hover:bg-neutral-800 transition-colors group cursor-pointer">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 text-neutral-500 group-hover:text-[#E1306C] transition-colors" aria-hidden="true"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"></line></svg>
           </button>
-          <a id="btn-github" href="https://github.com/Gourab775" target="_blank" rel="noopener noreferrer" aria-label="Visit the maker on GitHub" title="Maker on GitHub" class="wd-focusable w-8 h-8 md:w-9 md:h-9 rounded-lg border border-neutral-800 bg-neutral-900/80 flex items-center justify-center hover:bg-neutral-800 transition-colors group cursor-pointer">
+          <a id="btn-github" href="https://github.com/Gourab775" target="_blank" rel="noopener noreferrer" aria-label="Visit the maker on GitHub" title="Maker on GitHub" class="wd-focusable w-8 h-8 sm:w-9 sm:h-9 rounded-lg border border-neutral-800 bg-neutral-900/80 flex items-center justify-center hover:bg-neutral-800 transition-colors group cursor-pointer">
             <svg viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4 text-neutral-500 group-hover:text-white transition-colors" aria-hidden="true"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
           </a>
         </div>
-        <span class="hidden sm:block text-sm font-medium tracking-wide text-neutral-500 uppercase mt-1 ml-1">v2.2.0</span>
+        <span class="hidden sm:block text-[10px] sm:text-xs font-medium tracking-wide text-neutral-500 uppercase opacity-50">v2.2.0</span>
       </div>
 
-      <!-- Quick actions (bottom center) -->
-      <div id="quick-actions" class="static sm:absolute sm:bottom-8 md:bottom-10 sm:left-1/2 sm:-translate-x-1/2 flex items-center justify-center gap-2 sm:gap-3 md:gap-4">
-        <button id="btn-open-daily" aria-label="Daily reward gift" title="Daily reward" class="wd-focusable relative w-10 h-10 md:w-14 md:h-14 rounded-full border border-neutral-800 bg-neutral-900/80 backdrop-blur-md flex items-center justify-center hover:bg-neutral-800 hover:scale-105 active:scale-95 transition-all group shadow-lg cursor-pointer">
-          <i data-lucide="gift" class="w-5 h-5 md:w-6 md:h-6 text-neutral-400 group-hover:text-rose-300 transition-colors"></i>
-          <span id="daily-dot" class="hidden absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-rose-400 shadow-[0_0_10px_2px_rgba(251,113,133,0.6)]"></span>
-        </button>
-        <button id="btn-open-scores" aria-label="Past scores" title="Past scores" class="wd-focusable w-10 h-10 md:w-14 md:h-14 rounded-full border border-neutral-800 bg-neutral-900/80 backdrop-blur-md flex items-center justify-center hover:bg-neutral-800 hover:scale-105 active:scale-95 transition-all group shadow-lg cursor-pointer">
-          <i data-lucide="trophy" class="w-5 h-5 md:w-6 md:h-6 text-neutral-400 group-hover:text-amber-400 transition-colors"></i>
-        </button>
-        <button id="btn-open-settings" aria-label="Settings" title="Settings" class="wd-focusable w-10 h-10 md:w-14 md:h-14 rounded-full border border-neutral-800 bg-neutral-900/80 backdrop-blur-md flex items-center justify-center hover:bg-neutral-800 hover:scale-105 active:scale-95 transition-all group shadow-lg cursor-pointer">
-          <i data-lucide="settings" class="w-5 h-5 md:w-6 md:h-6 text-neutral-400 group-hover:text-white transition-colors"></i>
-        </button>
-        <button id="btn-open-changelog" aria-label="Leaderboard" title="Leaderboard" class="wd-focusable w-10 h-10 md:w-14 md:h-14 rounded-full border border-neutral-800 bg-neutral-900/80 backdrop-blur-md flex items-center justify-center hover:bg-neutral-800 hover:scale-105 active:scale-95 transition-all group shadow-lg cursor-pointer">
-          <i data-lucide="bar-chart-2" class="w-5 h-5 md:w-6 md:h-6 text-neutral-400 group-hover:text-green-400 transition-colors"></i>
-        </button>
-        <button id="btn-open-credits" aria-label="About and credits" title="Credits" class="wd-focusable w-10 h-10 md:w-14 md:h-14 rounded-full border border-neutral-800 bg-neutral-900/80 backdrop-blur-md flex items-center justify-center hover:bg-neutral-800 hover:scale-105 active:scale-95 transition-all group shadow-lg cursor-pointer">
-          <i data-lucide="info" class="w-5 h-5 md:w-6 md:h-6 text-neutral-400 group-hover:text-blue-400 transition-colors"></i>
-        </button>
-        <button id="btn-toggle-music" aria-label="Toggle music" title="Music on/off" class="wd-focusable w-10 h-10 md:w-14 md:h-14 rounded-full border border-neutral-800 bg-neutral-900/80 backdrop-blur-md flex items-center justify-center hover:bg-neutral-800 hover:scale-105 active:scale-95 transition-all group shadow-lg cursor-pointer">
-          <i data-lucide="music" class="w-5 h-5 md:w-6 md:h-6 text-neutral-400 group-hover:text-purple-400 transition-colors"></i>
-        </button>
-      </div>
-
-      <!-- Mode & Size Selectors -->
-      <div class="flex flex-col items-end gap-2 sm:gap-3 pb-1">
-        <span class="text-sm font-medium tracking-wide text-neutral-500 uppercase mr-1 mb-1 hidden md:block">Game Options</span>
-        <div id="mode-selector" class="inline-flex items-center justify-center gap-1.5 sm:gap-2 bg-neutral-900/80 p-1 sm:p-1.5 rounded-xl border border-neutral-800 backdrop-blur-md shadow-inner" role="group" aria-label="Difficulty">
-          <button id="mode-easy" class="wd-focusable px-3 py-1.5 sm:px-4 sm:py-2 rounded-md bg-neutral-800 text-neutral-400 border border-neutral-700 hover:text-white transition-colors text-xs sm:text-sm cursor-pointer">Easy</button>
-          <button id="mode-medium" class="wd-focusable px-3 py-1.5 sm:px-4 sm:py-2 rounded-md bg-white text-neutral-950 font-medium border border-white transition-colors text-xs sm:text-sm cursor-pointer">Medium</button>
-          <button id="mode-hard" class="wd-focusable px-3 py-1.5 sm:px-4 sm:py-2 rounded-md bg-neutral-800 text-neutral-400 border border-neutral-700 hover:text-white transition-colors text-xs sm:text-sm cursor-pointer">Hard</button>
+      <!-- Right: Quick actions + Mode/Size -->
+      <div class="flex flex-col items-end sm:items-end gap-4 sm:gap-6 w-full">
+        <!-- Quick actions -->
+        <div id="quick-actions" class="flex items-center justify-center gap-2 sm:gap-3 w-full">
+          <button id="btn-open-daily" aria-label="Daily reward gift" title="Daily reward" class="wd-focusable relative w-10 h-10 sm:w-12 sm:h-12 rounded-full border border-neutral-800 bg-neutral-900/80 backdrop-blur-md flex items-center justify-center hover:bg-neutral-800 hover:scale-105 active:scale-95 transition-all duration-300 group shadow-lg cursor-pointer">
+            <i data-lucide="gift" class="w-5 h-5 sm:w-6 sm:h-6 text-neutral-400 group-hover:text-rose-300 transition-colors"></i>
+            <span id="daily-dot" class="hidden absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-rose-400 shadow-[0_0_10px_2px_rgba(251,113,133,0.6)]"></span>
+          </button>
+          <button id="btn-open-scores" aria-label="Past scores" title="Past scores" class="wd-focusable w-10 h-10 sm:w-12 sm:h-12 rounded-full border border-neutral-800 bg-neutral-900/80 backdrop-blur-md flex items-center justify-center hover:bg-neutral-800 hover:scale-105 active:scale-95 transition-all duration-300 group shadow-lg cursor-pointer">
+            <i data-lucide="trophy" class="w-5 h-5 sm:w-6 sm:h-6 text-neutral-400 group-hover:text-amber-400 transition-colors"></i>
+          </button>
+          <button id="btn-open-settings" aria-label="Settings" title="Settings" class="wd-focusable w-10 h-10 sm:w-12 sm:h-12 rounded-full border border-neutral-800 bg-neutral-900/80 backdrop-blur-md flex items-center justify-center hover:bg-neutral-800 hover:scale-105 active:scale-95 transition-all duration-300 group shadow-lg cursor-pointer">
+            <i data-lucide="settings" class="w-5 h-5 sm:w-6 sm:h-6 text-neutral-400 group-hover:text-white transition-colors"></i>
+          </button>
+          <button id="btn-open-changelog" aria-label="Leaderboard" title="Leaderboard" class="wd-focusable w-10 h-10 sm:w-12 sm:h-12 rounded-full border border-neutral-800 bg-neutral-900/80 backdrop-blur-md flex items-center justify-center hover:bg-neutral-800 hover:scale-105 active:scale-95 transition-all duration-300 group shadow-lg cursor-pointer">
+            <i data-lucide="bar-chart-2" class="w-5 h-5 sm:w-6 sm:h-6 text-neutral-400 group-hover:text-green-400 transition-colors"></i>
+          </button>
+          <button id="btn-open-credits" aria-label="About and credits" title="Credits" class="wd-focusable w-10 h-10 sm:w-12 sm:h-12 rounded-full border border-neutral-800 bg-neutral-900/80 backdrop-blur-md flex items-center justify-center hover:bg-neutral-800 hover:scale-105 active:scale-95 transition-all duration-300 group shadow-lg cursor-pointer">
+            <i data-lucide="info" class="w-5 h-5 sm:w-6 sm:h-6 text-neutral-400 group-hover:text-blue-400 transition-colors"></i>
+          </button>
+          <button id="btn-toggle-music" aria-label="Toggle music" title="Music on/off" class="wd-focusable w-10 h-10 sm:w-12 sm:h-12 rounded-full border border-neutral-800 bg-neutral-900/80 backdrop-blur-md flex items-center justify-center hover:bg-neutral-800 hover:scale-105 active:scale-95 transition-all duration-300 group shadow-lg cursor-pointer">
+            <i data-lucide="music" class="w-5 h-5 sm:w-6 sm:h-6 text-neutral-400 group-hover:text-purple-400 transition-colors"></i>
+          </button>
         </div>
-        <div id="size-selector" class="inline-flex items-center justify-center gap-1.5 sm:gap-2 bg-neutral-900/80 p-1 sm:p-1.5 rounded-xl border border-neutral-800 backdrop-blur-md shadow-inner" role="group" aria-label="Wave size">
-          <button id="size-normal" class="wd-focusable px-3 py-1.5 sm:px-4 sm:py-2 rounded-md bg-white text-neutral-950 font-medium border border-white transition-colors text-xs sm:text-sm cursor-pointer">Normal Wave</button>
-          <button id="size-mini" class="wd-focusable px-3 py-1.5 sm:px-4 sm:py-2 rounded-md bg-neutral-800 text-neutral-400 border border-neutral-700 hover:text-white transition-colors text-xs sm:text-sm cursor-pointer">Mini Wave</button>
+
+        <!-- Mode & Size Selectors -->
+        <div class="flex flex-col items-end gap-3 sm:gap-4 w-full">
+          <span class="text-[10px] sm:text-xs font-medium tracking-wide text-neutral-500 uppercase opacity-60 mb-1">Game Options</span>
+          <div class="flex flex-col sm:flex-row items-end gap-3 sm:gap-2">
+            <div id="mode-selector" class="inline-flex items-center justify-center gap-1.5 sm:gap-2 bg-neutral-900/80 p-1 sm:p-1.5 rounded-xl border border-neutral-700 backdrop-blur-md shadow-inner" role="group" aria-label="Difficulty">
+              <button id="mode-easy" class="wd-focusable px-3 py-1.5 sm:px-4 sm:py-2 rounded-md bg-neutral-800 text-neutral-400 border border-neutral-700 hover:text-white transition-colors text-xs sm:text-sm cursor-pointer">Easy</button>
+              <button id="mode-medium" class="wd-focusable px-3 py-1.5 sm:px-4 sm:py-2 rounded-md bg-white text-neutral-950 font-medium border border-white transition-colors text-xs sm:text-sm cursor-pointer">Medium</button>
+              <button id="mode-hard" class="wd-focusable px-3 py-1.5 sm:px-4 sm:py-2 rounded-md bg-neutral-800 text-neutral-400 border border-neutral-700 hover:text-white transition-colors text-xs sm:text-sm cursor-pointer">Hard</button>
+            </div>
+            <div id="size-selector" class="inline-flex items-center justify-center gap-1.5 sm:gap-2 bg-neutral-900/80 p-1 sm:p-1.5 rounded-xl border border-neutral-700 backdrop-blur-md shadow-inner" role="group" aria-label="Wave size">
+              <button id="size-normal" class="wd-focusable px-3 py-1.5 sm:px-4 sm:py-2 rounded-md bg-white text-neutral-950 font-medium border border-white transition-colors text-xs sm:text-sm cursor-pointer">Normal</button>
+              <button id="size-mini" class="wd-focusable px-3 py-1.5 sm:px-4 sm:py-2 rounded-md bg-neutral-800 text-neutral-400 border border-neutral-700 hover:text-white transition-colors text-xs sm:text-sm cursor-pointer">Mini</button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -1037,7 +1045,6 @@
       function updateMenuBest() {
         var best = WD.store.best;
         bestValue.textContent = best;
-        bestDisplay.classList.toggle('hidden', best <= 0);
         bestBadgeValue.textContent = best;
         bestBadge.classList.toggle('hidden', best <= 0);
       }
@@ -1118,6 +1125,7 @@
 
         scoreDisplay.textContent = '0';
         scoreDisplay.style.transform = 'scale(1)';
+        bestDisplay.classList.remove('hidden');
 
         cancelAnimationFrame(animationId);
         lastTime = performance.now();
@@ -1215,6 +1223,7 @@
         var apCheckbox = document.getElementById('toggle-autoplay-pause');
         if (apCheckbox) apCheckbox.checked = false;
         customBadge.classList.add('hidden');
+        attemptLabel.classList.add('hidden');
 
         obstacles = [];
         trail = [];
@@ -1227,9 +1236,13 @@
         player.angle = Math.PI / 2;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         updateMenuBest();
+        bestDisplay.classList.add('hidden');
 
         bgMusic.pause();
         try { bgMusic.currentTime = 0; } catch (e) {}
+
+        /* Resume lobby/menu music when returning to home screen. */
+        if (!isMusicMuted) menuMusic.play().catch(function () {});
 
         cancelAnimationFrame(animationId);
         pauseMenu.style.opacity = '0';

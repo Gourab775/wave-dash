@@ -75,9 +75,9 @@
     <span class="text-base sm:text-lg text-neutral-500 font-medium tracking-wide uppercase">Score</span>
     <span id="score-display" class="text-3xl sm:text-4xl font-semibold tracking-tight text-white tabular-nums drop-shadow-md transition-transform duration-100">0</span>
   </div>
-  <div id="best-display" class="hidden absolute top-24 right-8 z-20 flex items-center gap-2 text-sm font-medium tracking-wide text-neutral-500 uppercase tabular-nums">
+  <div id="hud-best" class="hidden absolute top-24 right-8 z-20 flex items-center gap-2 text-sm font-medium tracking-wide text-neutral-500 uppercase tabular-nums">
     <i data-lucide="crown" class="w-4 h-4 text-amber-400"></i>
-    Best <span id="best-value" class="text-white">0</span>
+    Best <span id="hud-best-value" class="text-white">0</span>
   </div>
   <div id="cps-display" class="hidden absolute top-36 right-8 z-20 text-sm font-medium tracking-wide text-neutral-500 uppercase tabular-nums">
     CPS <span id="cps-value" class="text-white">0</span>
@@ -184,16 +184,14 @@
         <!-- Mode & Size Selectors -->
         <div class="flex flex-col items-end gap-3 sm:gap-4 w-full">
           <span class="text-[10px] sm:text-xs font-medium tracking-wide text-neutral-500 uppercase opacity-60 mb-1">Game Options</span>
-          <div class="flex flex-col sm:flex-row items-end gap-3 sm:gap-2">
-            <div id="mode-selector" class="inline-flex items-center justify-center gap-1.5 sm:gap-2 bg-neutral-900/80 p-1 sm:p-1.5 rounded-xl border border-neutral-700 backdrop-blur-md shadow-inner" role="group" aria-label="Difficulty">
-              <button id="mode-easy" class="wd-focusable px-3 py-1.5 sm:px-4 sm:py-2 rounded-md bg-neutral-800 text-neutral-400 border border-neutral-700 hover:text-white transition-colors text-xs sm:text-sm cursor-pointer">Easy</button>
-              <button id="mode-medium" class="wd-focusable px-3 py-1.5 sm:px-4 sm:py-2 rounded-md bg-white text-neutral-950 font-medium border border-white transition-colors text-xs sm:text-sm cursor-pointer">Medium</button>
-              <button id="mode-hard" class="wd-focusable px-3 py-1.5 sm:px-4 sm:py-2 rounded-md bg-neutral-800 text-neutral-400 border border-neutral-700 hover:text-white transition-colors text-xs sm:text-sm cursor-pointer">Hard</button>
-            </div>
-            <div id="size-selector" class="inline-flex items-center justify-center gap-1.5 sm:gap-2 bg-neutral-900/80 p-1 sm:p-1.5 rounded-xl border border-neutral-700 backdrop-blur-md shadow-inner" role="group" aria-label="Wave size">
-              <button id="size-normal" class="wd-focusable px-3 py-1.5 sm:px-4 sm:py-2 rounded-md bg-white text-neutral-950 font-medium border border-white transition-colors text-xs sm:text-sm cursor-pointer">Normal</button>
-              <button id="size-mini" class="wd-focusable px-3 py-1.5 sm:px-4 sm:py-2 rounded-md bg-neutral-800 text-neutral-400 border border-neutral-700 hover:text-white transition-colors text-xs sm:text-sm cursor-pointer">Mini</button>
-            </div>
+          <div id="mode-selector" class="inline-flex items-center justify-center gap-1.5 sm:gap-2 bg-neutral-900/80 p-1 sm:p-1.5 rounded-xl border border-neutral-700 backdrop-blur-md shadow-inner w-full sm:w-auto" role="group" aria-label="Difficulty">
+            <button id="mode-easy" class="wd-focusable px-3 py-1.5 sm:px-4 sm:py-2 rounded-md bg-neutral-800 text-neutral-400 border border-neutral-700 hover:text-white transition-colors text-xs sm:text-sm cursor-pointer">Easy</button>
+            <button id="mode-medium" class="wd-focusable px-3 py-1.5 sm:px-4 sm:py-2 rounded-md bg-white text-neutral-950 font-medium border border-white transition-colors text-xs sm:text-sm cursor-pointer">Medium</button>
+            <button id="mode-hard" class="wd-focusable px-3 py-1.5 sm:px-4 sm:py-2 rounded-md bg-neutral-800 text-neutral-400 border border-neutral-700 hover:text-white transition-colors text-xs sm:text-sm cursor-pointer">Hard</button>
+          </div>
+          <div id="size-selector" class="inline-flex items-center justify-center gap-1.5 sm:gap-2 bg-neutral-900/80 p-1 sm:p-1.5 rounded-xl border border-neutral-700 backdrop-blur-md shadow-inner w-full sm:w-auto mt-2 sm:mt-0" role="group" aria-label="Wave size">
+            <button id="size-normal" class="wd-focusable px-3 py-1.5 sm:px-4 sm:py-2 rounded-md bg-white text-neutral-950 font-medium border border-white transition-colors text-xs sm:text-sm cursor-pointer">Normal</button>
+            <button id="size-mini" class="wd-focusable px-3 py-1.5 sm:px-4 sm:py-2 rounded-md bg-neutral-800 text-neutral-400 border border-neutral-700 hover:text-white transition-colors text-xs sm:text-sm cursor-pointer">Mini</button>
           </div>
         </div>
       </div>
@@ -269,12 +267,12 @@
             <button data-color="#6db8f7" aria-label="Blue trail" class="wd-focusable w-11 h-11 rounded-full ring-1 ring-white/10 border-[3px] border-transparent bg-[#6db8f7] shadow-[0_0_20px_-5px_#6db8f7] transition-all hover:scale-110 cursor-pointer"></button>
             <button data-color="#f76df7" aria-label="Pink trail" class="wd-focusable w-11 h-11 rounded-full ring-1 ring-white/10 border-[3px] border-transparent bg-[#f76df7] shadow-[0_0_20px_-5px_#f76df7] transition-all hover:scale-110 cursor-pointer"></button>
             <button data-color="#f7b86d" aria-label="Orange trail" class="wd-focusable w-11 h-11 rounded-full ring-1 ring-white/10 border-[3px] border-transparent bg-[#f7b86d] shadow-[0_0_20px_-5px_#f7b86d] transition-all hover:scale-110 cursor-pointer"></button>
-          </div>
+        </div>
           <div class="flex flex-wrap items-center justify-center gap-4 mb-4">
-            <span class="text-[10px] uppercase tracking-wider text-neutral-500 block w-full text-center mb-2">Earned trail colors</span>
+            <span class="text-[10px] uppercase tracking-wider text-neutral-500 block w-full text-center mb-2">Earned trail colors (glitery)</span>
             <div id="earned-color-swatch" class="flex flex-wrap items-center justify-center gap-2"></div>
           </div>
-          <p class="text-[11px] text-neutral-500 mt-2">Unlock unique trail colors by reaching score milestones — 5 / 15 / 30 / 50 / 75 / 100.</p>
+          <p class="text-[11px] text-neutral-500 mt-2">Unlock unique glitery trail colors by reaching score milestones — 5 / 15 / 30 / 50 / 75 / 100.</p>
         </div>
         <button id="btn-close-icon-kit" class="wd-focusable px-8 py-3 rounded-full bg-white text-neutral-950 font-medium text-lg hover:bg-neutral-200 active:scale-95 transition-all shadow-[0_0_20px_-5px_rgba(255,255,255,0.3)] cursor-pointer">Done</button>
       </div>
@@ -448,7 +446,8 @@
           <i data-lucide="flame" class="w-4 h-4 text-orange-400"></i>
           <span><span id="daily-streak-value" class="text-white font-semibold">0</span>-day streak</span>
         </div>
-        <div id="daily-calendar" class="grid grid-cols-4 gap-2 mb-5 w-full"></div>
+        <div id="daily-calendar" class="grid grid-cols-7 gap-2 mb-5 w-full"></div>
+        <div id="daily-streak-preview" class="w-full text-left mb-6"></div>
         <div class="w-full text-left mb-6">
           <h3 class="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-400 mb-3">Daily Icons</h3>
           <div id="daily-icon-strip" class="flex flex-wrap items-center gap-2"></div>
@@ -620,6 +619,7 @@
           icon: 'wave',
           colors: { c1: '#ffffff', c2: '#000000', theme: '#ffffff' },
           unlockedColors: [],
+          gliteryColors: [],
           unlockedIcons: ['wave'],
           mode: 'medium',
           waveSize: 'normal',
@@ -657,6 +657,8 @@
         d.pastScores = d.pastScores.filter(function (n) { return typeof n === 'number' && isFinite(n) && n >= 0; }).slice(0, 100);
         if (!Array.isArray(d.unlockedColors)) d.unlockedColors = [];
         d.unlockedColors = d.unlockedColors.filter(function (n) { return typeof n === 'string' && /^#[0-9a-fA-F]{3,8}$/.test(n); });
+        if (!Array.isArray(d.gliteryColors)) d.gliteryColors = [];
+        d.gliteryColors = d.gliteryColors.filter(function (n) { return typeof n === 'string' && /^#[0-9a-fA-F]{3,8}$/.test(n); });
         if (!Array.isArray(d.unlockedIcons)) d.unlockedIcons = [];
         d.unlockedIcons = d.unlockedIcons.filter(function (n) { return typeof n === 'string' && !!ICON_LABELS[n]; });
         if (d.unlockedIcons.indexOf('wave') === -1) d.unlockedIcons.unshift('wave');
@@ -732,9 +734,9 @@
         });
         if (!newly.length) return;
         newly.forEach(function (m) { s.unlockedIcons.push(m.icon); });
-        /* Level-based unique trail colors */
+        /* Level-based unique trail colors — these become GLITERY (sparkle) colors from gameplay */
         LEVEL_COLOR_MILESTONES.forEach(function (m) {
-          if (target >= m.score && s.unlockedColors.indexOf(m.c) === -1) s.unlockedColors.push(m.c);
+          if (target >= m.score && s.gliteryColors.indexOf(m.c) === -1) s.gliteryColors.push(m.c);
         });
         WD.persist();
         newly.forEach(function (m, i) {
@@ -746,9 +748,9 @@
         });
         /* Toast level colors */
         LEVEL_COLOR_MILESTONES.forEach(function (m, i) {
-          if (target >= m.score && s.unlockedColors.indexOf(m.c) !== -1) {
+          if (target >= m.score && s.gliteryColors.indexOf(m.c) !== -1) {
             setTimeout(function () {
-              toast('Trail color unlocked: ' + m.n, 'good');
+              toast('Glitery trail color unlocked: ' + m.n, 'good');
               sfx('gift');
               try { window.dispatchEvent(new CustomEvent('wd-colors-changed', { detail: { color: m.c } })); } catch (e) {}
             }, (newly.length + i) * 450);
@@ -874,8 +876,8 @@
       var menuMusic = document.getElementById('menu-music');
       var deathSfx = document.getElementById('death-sfx');
 
-      var bestDisplay = document.getElementById('best-display');
-      var bestValue = document.getElementById('best-value');
+      var bestDisplay = document.getElementById('hud-best');
+      var bestValue = document.getElementById('hud-best-value');
       var bestBadge = document.getElementById('best-badge');
       var bestBadgeValue = document.getElementById('best-badge-value');
       var attemptLabel = document.getElementById('attempt-label');
@@ -980,6 +982,7 @@
       var obstacles = [];
       var trail = [];
       var particles = [];
+      var trailSparkles = [];
       var runPattern = null;
       var patternIdx = 0;
 
@@ -1088,6 +1091,7 @@
         obstacles = [];
         trail = [];
         particles = [];
+        trailSparkles = [];
         score = 0;
         frameCount = 0;
 
@@ -1228,6 +1232,7 @@
         obstacles = [];
         trail = [];
         particles = [];
+        trailSparkles = [];
         score = 0;
         frameCount = 0;
         applyDifficulty();
@@ -1468,6 +1473,36 @@
           ctx.moveTo(trail[0].x, trail[0].y);
           for (var j = 1; j < trail.length; j++) ctx.lineTo(trail[j].x, trail[j].y);
           ctx.stroke();
+        }
+
+        /* Glitery sparkle effect for gameplay-earned trail colors */
+        var isGlitery = S.gliteryColors.indexOf(themeColor) !== -1;
+        if (isGlitery) {
+          if (Math.random() < 0.25) {
+            var idx = Math.floor(Math.random() * trail.length);
+            var tp = trail[idx];
+            trailSparkles.push({
+              x: tp.x, y: tp.y,
+              vx: (Math.random() - 0.5) * 2, vy: (Math.random() - 0.5) * 2,
+              life: 1.0, size: Math.random() * 3 + 1, color: themeColor
+            });
+          }
+          for (var k = trailSparkles.length - 1; k >= 0; k--) {
+            var sp = trailSparkles[k];
+            sp.x += sp.vx;
+            sp.y += sp.vy;
+            sp.life -= 0.05;
+            if (sp.life <= 0) { trailSparkles.splice(k, 1); continue; }
+            ctx.save();
+            ctx.globalAlpha = sp.life;
+            ctx.fillStyle = sp.color;
+            ctx.shadowColor = sp.color;
+            ctx.shadowBlur = 12;
+            ctx.beginPath();
+            ctx.arc(sp.x, sp.y, sp.size * sp.life, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+          }
         }
 
         ctx.restore();
@@ -1973,13 +2008,33 @@
         var strip = $id('earned-color-swatch');
         if (!strip) return;
         strip.innerHTML = '';
-        S.unlockedColors.forEach(function (hex) {
-          var b = document.createElement('div');
-          b.className = 'w-8 h-8 rounded-full border border-white/10 shadow-md';
-          b.style.background = hex;
-          b.style.boxShadow = '0 0 15px -5px ' + hex;
-          b.setAttribute('title', hex);
-          strip.appendChild(b);
+        LEVEL_COLOR_MILESTONES.forEach(function (m) {
+          var unlocked = S.gliteryColors.indexOf(m.c) !== -1;
+          var item = document.createElement('div');
+          item.className = 'flex flex-col items-center gap-1';
+          var tile = document.createElement('div');
+          tile.className = 'w-10 h-10 rounded-full border flex items-center justify-center relative ' +
+            (unlocked ? 'border-green-800/50 bg-neutral-900/70 shadow-[0_0_15px_-5px_' + m.c + ']' : 'border-neutral-800 bg-neutral-900/50') +
+            (unlocked ? ' cursor-pointer' : ' cursor-not-allowed');
+          if (unlocked) {
+            tile.style.background = m.c;
+            tile.style.boxShadow = '0 0 15px -5px ' + m.c;
+            tile.setAttribute('title', m.n + ' — unlocked (glitery trail)');
+          } else {
+            tile.style.background = 'transparent';
+            tile.style.boxShadow = 'none';
+            tile.setAttribute('title', colorLockHint(m.c));
+            var badge = document.createElement('span');
+            badge.className = 'wd-lock-badge absolute top-0 right-0 w-4 h-4 rounded-full bg-neutral-950/90 border border-neutral-700 text-neutral-300 flex items-center justify-center shadow-md z-10';
+            badge.innerHTML = LOCK_BADGE_SVG;
+            tile.appendChild(badge);
+          }
+          var label = document.createElement('span');
+          label.className = 'text-[9px] leading-tight text-center max-w-[3rem] truncate ' + (unlocked ? 'text-green-300' : 'text-neutral-500');
+          label.textContent = m.n;
+          item.appendChild(tile);
+          item.appendChild(label);
+          strip.appendChild(item);
         });
       }
 
@@ -2057,6 +2112,13 @@
         if (m) return label + ' is locked — earn it with a ' + m.score + '+ score run!';
         if (WD.DAILY_ICON_POOL.indexOf(iconName) !== -1) return label + ' is locked — win it from the Daily Reward!';
         return label + ' is locked.';
+      }
+      function colorLockHint(colorHex) {
+        var m = WD.LEVEL_COLOR_MILESTONES.filter(function (x) { return x.c.toLowerCase() === String(colorHex).toLowerCase(); })[0];
+        if (m) return m.n + ' is locked — reach ' + m.score + '+ score to unlock (glitery trail)!';
+        var d = WD.SPECIAL_COLORS.filter(function (x) { return x.c.toLowerCase() === String(colorHex).toLowerCase(); })[0];
+        if (d) return d.n + ' is locked — win it from the Daily Reward!';
+        return colorHex + ' is locked.';
       }
       var LOCK_BADGE_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-2.5 h-2.5" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>';
       function refreshIconLocks() {
@@ -2364,11 +2426,11 @@
           : 'One gift per day — every claim unlocks a new icon first, then exclusive trail colors. Miss a day and the streak resets!';
         if (!dailyCalendar) return;
         dailyCalendar.innerHTML = '';
-        for (var i = 1; i <= 6; i++) {
-          var reward = WD.SPECIAL_COLORS[i - 1];
+        for (var i = 1; i <= 7; i++) {
+          var reward = WD.SPECIAL_COLORS[(i - 1) % 6];
           var unlocked = S.unlockedColors.some(function (c) { return String(c).toLowerCase() === reward.c.toLowerCase(); });
           var chip = document.createElement('div');
-          var nextChip = ((S.daily.streak % 6) + 1) === i && !isClaimedToday();
+          var nextChip = ((S.daily.streak % 7) + 1) === i && !isClaimedToday();
           chip.className = 'rounded-xl border px-2 py-2 flex flex-col items-center gap-1 ' +
             (unlocked ? 'border-green-800/50 bg-neutral-900/60' : 'border-neutral-800 bg-neutral-900/40') +
             (nextChip ? ' ring-1 ring-rose-400/70' : '');
@@ -2383,6 +2445,39 @@
           dailyCalendar.appendChild(chip);
         }
         renderDailyIconStrip();
+        renderDailyStreakPreview();
+      }
+
+      function renderDailyStreakPreview() {
+        var preview = $id('daily-streak-preview');
+        if (!preview) return;
+        preview.innerHTML = '';
+        var header = document.createElement('div');
+        header.className = 'text-[10px] uppercase tracking-wider text-neutral-500 block w-full text-center mb-2';
+        header.textContent = '7-Day Streak — what unlocks each day:';
+        preview.appendChild(header);
+        var row = document.createElement('div');
+        row.className = 'flex flex-wrap justify-center gap-2';
+        for (var i = 1; i <= 7; i++) {
+          var reward = WD.SPECIAL_COLORS[(i - 1) % 6];
+          var unlocked = S.unlockedColors.some(function (c) { return String(c).toLowerCase() === reward.c.toLowerCase(); });
+          var item = document.createElement('div');
+          item.className = 'flex flex-col items-center gap-1';
+          var tile = document.createElement('div');
+          tile.className = 'w-10 h-10 rounded-full border flex items-center justify-center ' +
+            (unlocked ? 'border-green-800/50 bg-neutral-900/70' : 'border-neutral-800 bg-neutral-900/50');
+          var swatch = document.createElement('div');
+          swatch.className = 'w-6 h-6 rounded-full border border-white/10';
+          swatch.style.background = unlocked ? reward.c : 'transparent';
+          tile.appendChild(swatch);
+          var label = document.createElement('span');
+          label.className = 'text-[9px] leading-tight text-center max-w-[2.5rem] truncate ' + (unlocked ? 'text-green-300' : 'text-neutral-500');
+          label.textContent = 'Day ' + i + ' — ' + reward.n;
+          item.appendChild(tile);
+          item.appendChild(label);
+          row.appendChild(item);
+        }
+        preview.appendChild(row);
       }
 
       function renderDailyIconStrip() {

@@ -1,10 +1,10 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en" class="h-full">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>Wave Dash</title>
-  <meta name="description" content="Wave Dash â€” a one-button neon wave-riding game. Hold to glide up, release to dive down, and thread your wave through the gaps." />
+  <meta name="description" content="Wave Dash — a one-button neon wave-riding game. Hold to glide up, release to dive down, and thread your wave through the gaps." />
   <meta name="theme-color" content="#0a0a0a" />
   <meta name="color-scheme" content="dark" />
   <link rel="stylesheet" href="public/assets/css/game.css" />
@@ -27,7 +27,11 @@
     img,button,a{-webkit-touch-callout:none;}
     #ui-layer{padding-top:calc(2rem + var(--sa-t));padding-right:calc(2rem + var(--sa-r));padding-bottom:calc(2rem + var(--sa-b));padding-left:calc(2rem + var(--sa-l));}
     #hud-score{top:calc(2rem + var(--sa-t));right:calc(2rem + var(--sa-r));}
-    #best-display{top:calc(6rem + var(--sa-t));right:calc(2rem + var(--sa-r));}
+    #best-display{top:calc(5.5rem + var(--sa-t));right:calc(2rem + var(--sa-r));}
+    #stage-label{top:calc(4.2rem + var(--sa-t));}
+    /* Waver Pass reward strip */
+    #pass-reward-strip{scrollbar-width:none;-ms-overflow-style:none;}
+    #pass-reward-strip::-webkit-scrollbar{display:none;}
     #cps-display{top:calc(9rem + var(--sa-t));right:calc(2rem + var(--sa-r));}
     #pause-btn-container{top:calc(2rem + var(--sa-t));left:calc(2rem + var(--sa-l));}
     #attempt-label{top:calc(2rem + var(--sa-t));}
@@ -56,8 +60,7 @@
     }
     /* Short screens: compact phones (portrait) & landscape phones */
     @media (max-height: 600px) {
-      #center-row { top: 40%; }
-      #player-name-label { display: none; }
+      #player-name-label, #subtitle { display: none; }
     }
     @media (max-height: 500px) {
       #start-btn { width: 6.5rem; height: 6.5rem; border-radius: 1.75rem; }
@@ -76,11 +79,11 @@
   <audio id="death-sfx" src="public/assets/audio/death-sfx.mp3" preload="auto"></audio>
 
   <!-- Score HUD -->
-  <div id="hud-score" class="absolute top-8 right-8 z-20 flex items-center gap-3">
+  <div id="hud-score" class="hidden absolute top-8 right-8 z-20 flex items-center gap-3">
     <span class="text-base sm:text-lg text-neutral-500 font-medium tracking-wide uppercase">Score</span>
     <span id="score-display" class="text-3xl sm:text-4xl font-semibold tracking-tight text-white tabular-nums drop-shadow-md transition-transform duration-100">0</span>
   </div>
-  <div id="best-display" class="hidden absolute top-24 right-8 z-20 flex items-center gap-2 text-sm font-medium tracking-wide text-neutral-500 uppercase tabular-nums">
+  <div id="best-display" class="hidden absolute top-[5.5rem] right-8 z-20 flex items-center gap-2 text-xs sm:text-sm font-medium tracking-wide text-neutral-500 uppercase tabular-nums">
     <i data-lucide="crown" class="w-4 h-4 text-amber-400"></i>
     Best <span id="best-value" class="text-white">0</span>
   </div>
@@ -92,6 +95,7 @@
   <div id="attempt-label" class="hidden absolute top-8 left-1/2 -translate-x-1/2 z-20 text-sm font-medium tracking-[0.2em] text-neutral-500 uppercase tabular-nums">Attempt 1</div>
   <div id="custom-badge" class="hidden absolute top-14 left-1/2 -translate-x-1/2 z-20 text-xs font-semibold tracking-[0.25em] text-[#6df7b8] uppercase">Custom Run</div>
   <div id="hint-label" class="hidden absolute bottom-24 left-1/2 -translate-x-1/2 z-20 text-xs font-medium tracking-[0.2em] text-neutral-400 uppercase pointer-events-none">Hold to glide up &bull; Release to dive</div>
+  <div id="stage-label" class="hidden absolute top-[4.2rem] left-1/2 -translate-x-1/2 z-20 text-[10px] sm:text-xs font-bold tracking-[0.3em] text-white/85 uppercase pointer-events-none drop-shadow-md">Stage 2</div>
 
   <!-- Pause Button (Hidden by default) -->
   <div id="pause-btn-container" class="wd-guard absolute top-8 left-8 z-40 hidden transition-opacity duration-300 opacity-0">
@@ -101,105 +105,123 @@
   </div>
 
   <!-- UI Overlay (Start Menu) -->
-  <div id="ui-layer" class="wd-guard absolute inset-0 z-30 transition-opacity duration-300 pointer-events-none flex flex-col justify-between p-6 sm:p-8">
-    <!-- Top Row: Title -->
-    <div class="flex justify-center items-start pointer-events-auto">
-      <div class="flex flex-col items-center mt-4 sm:mt-6">
-        <h1 id="title" class="text-5xl sm:text-6xl md:text-7xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-br from-white via-rose-400 to-neutral-400 drop-shadow-[0_0_40px_-10px_rgba(251,113,133,0.4)] uppercase text-center leading-tight">
+  <div id="ui-layer" class="wd-guard absolute inset-0 z-30 transition-opacity duration-300 pointer-events-none flex flex-col">
+    <!-- Top bar: player chip (left) • quick actions (right) -->
+    <div class="flex items-start justify-between gap-2 sm:gap-4 pointer-events-auto">
+      <!-- Player chip: avatar + name + level bar (opens profile) -->
+      <button id="btn-profile" aria-label="Open profile" title="Profile &amp; stats" class="wd-focusable group flex items-center gap-2 sm:gap-3 max-w-[62%] sm:max-w-sm rounded-2xl border border-neutral-800 bg-neutral-900/70 backdrop-blur-md p-1.5 pr-3 sm:pr-4 hover:border-neutral-600 hover:bg-neutral-800/70 active:scale-[0.98] transition-all duration-300 shadow-lg cursor-pointer select-none">
+        <span class="relative w-9 h-9 sm:w-11 sm:h-11 shrink-0 rounded-xl bg-neutral-800 border border-neutral-700 flex items-center justify-center overflow-hidden">
+          <img id="home-avatar" src="public/assets/icons/wave.png" alt="Your wave" class="w-6 h-6 sm:w-7 sm:h-7 object-contain rotate-90 drop-shadow-[0_0_8px_rgba(255,255,255,0.25)] transition-transform duration-300 group-hover:scale-110" />
+        </span>
+        <span class="flex flex-col items-start min-w-0">
+          <span id="player-name-label" class="text-[11px] sm:text-sm font-semibold text-white/90 truncate max-w-[9rem] sm:max-w-[12rem] leading-tight">Player 1</span>
+          <span class="flex items-center gap-1.5 mt-1">
+            <span id="home-level-chip" class="text-[8px] sm:text-[9px] font-bold tracking-wider text-neutral-950 bg-white rounded px-1.5 py-[2px] leading-none shadow-md transition-colors">LV 1</span>
+            <span class="w-12 sm:w-16 h-1.5 rounded-full bg-neutral-800 overflow-hidden">
+              <span id="home-level-bar" class="block h-full rounded-full bg-gradient-to-r from-rose-400 via-amber-300 to-emerald-300 transition-[width] duration-500" style="width:0%"></span>
+            </span>
+          </span>
+        </span>
+      </button>
+
+      <!-- Quick actions -->
+      <div id="quick-actions" class="flex items-center justify-end gap-1.5 sm:gap-2 flex-wrap">
+        <button id="btn-open-daily" aria-label="Daily reward gift" title="Daily reward" class="wd-focusable relative group w-9 h-9 sm:w-11 sm:h-11 rounded-xl border border-neutral-800 bg-neutral-900/80 backdrop-blur-md flex items-center justify-center hover:bg-neutral-800 hover:scale-105 active:scale-95 transition-all duration-300 shadow-lg cursor-pointer">
+          <i data-lucide="gift" class="w-4 h-4 sm:w-5 sm:h-5 text-neutral-400 group-hover:text-rose-300 transition-colors"></i>
+          <span id="daily-dot" class="hidden absolute -top-1 -right-1 w-3 h-3 rounded-full bg-rose-400 shadow-[0_0_10px_2px_rgba(251,113,133,0.6)]"></span>
+        </button>
+        <button id="btn-open-pass" aria-label="Waver Pass — season rewards and missions" title="Waver Pass" class="wd-focusable relative group w-9 h-9 sm:w-11 sm:h-11 rounded-xl border border-neutral-800 bg-neutral-900/80 backdrop-blur-md flex items-center justify-center hover:bg-neutral-800 hover:scale-105 active:scale-95 transition-all duration-300 shadow-lg cursor-pointer">
+          <i data-lucide="sparkles" class="w-4 h-4 sm:w-5 sm:h-5 text-neutral-400 group-hover:text-amber-300 transition-colors"></i>
+          <span id="pass-dot" class="hidden absolute -top-1 -right-1 w-3 h-3 rounded-full bg-amber-300 shadow-[0_0_10px_2px_rgba(252,211,77,0.6)]"></span>
+        </button>
+        <button id="btn-open-scores" aria-label="Past scores" title="Past scores" class="wd-focusable group w-9 h-9 sm:w-11 sm:h-11 rounded-xl border border-neutral-800 bg-neutral-900/80 backdrop-blur-md flex items-center justify-center hover:bg-neutral-800 hover:scale-105 active:scale-95 transition-all duration-300 shadow-lg cursor-pointer">
+          <i data-lucide="trophy" class="w-4 h-4 sm:w-5 sm:h-5 text-neutral-400 group-hover:text-amber-400 transition-colors"></i>
+        </button>
+        <button id="btn-open-changelog" aria-label="Leaderboard" title="Leaderboard" class="wd-focusable group w-9 h-9 sm:w-11 sm:h-11 rounded-xl border border-neutral-800 bg-neutral-900/80 backdrop-blur-md flex items-center justify-center hover:bg-neutral-800 hover:scale-105 active:scale-95 transition-all duration-300 shadow-lg cursor-pointer">
+          <i data-lucide="bar-chart-2" class="w-4 h-4 sm:w-5 sm:h-5 text-neutral-400 group-hover:text-green-400 transition-colors"></i>
+        </button>
+        <button id="btn-open-settings" aria-label="Settings" title="Settings" class="wd-focusable group w-9 h-9 sm:w-11 sm:h-11 rounded-xl border border-neutral-800 bg-neutral-900/80 backdrop-blur-md flex items-center justify-center hover:bg-neutral-800 hover:scale-105 active:scale-95 transition-all duration-300 shadow-lg cursor-pointer">
+          <i data-lucide="settings" class="w-4 h-4 sm:w-5 sm:h-5 text-neutral-400 group-hover:text-white transition-colors"></i>
+        </button>
+        <button id="btn-toggle-music" aria-label="Toggle music" title="Music on/off" class="wd-focusable group w-9 h-9 sm:w-11 sm:h-11 rounded-xl border border-neutral-800 bg-neutral-900/80 backdrop-blur-md flex items-center justify-center hover:bg-neutral-800 hover:scale-105 active:scale-95 transition-all duration-300 shadow-lg cursor-pointer">
+          <i data-lucide="music" class="w-4 h-4 sm:w-5 sm:h-5 text-neutral-400 group-hover:text-purple-400 transition-colors"></i>
+        </button>
+        <button id="btn-open-credits" aria-label="About and credits" title="Credits" class="wd-focusable group w-9 h-9 sm:w-11 sm:h-11 rounded-xl border border-neutral-800 bg-neutral-900/80 backdrop-blur-md flex items-center justify-center hover:bg-neutral-800 hover:scale-105 active:scale-95 transition-all duration-300 shadow-lg cursor-pointer">
+          <i data-lucide="info" class="w-4 h-4 sm:w-5 sm:h-5 text-neutral-400 group-hover:text-blue-400 transition-colors"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Middle: brand + play + options, vertically centered -->
+    <div class="flex-1 min-h-0 flex flex-col items-center justify-center pointer-events-auto py-2 sm:py-3">
+      <div class="flex flex-col items-center">
+        <h1 id="title" class="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-br from-white via-rose-400 to-neutral-400 drop-shadow-[0_0_40px_-10px_rgba(251,113,133,0.4)] uppercase text-center leading-tight">
           Wave Dash
         </h1>
-        <p class="mt-2 sm:mt-3 text-xs sm:text-sm text-neutral-500 uppercase tracking-wider font-medium opacity-70">
+        <p class="mt-1 sm:mt-2 text-[10px] sm:text-xs text-neutral-500 uppercase tracking-wider font-medium opacity-70">
           One-button neon wave rider
         </p>
       </div>
+
+      <div class="flex items-center justify-center gap-4 sm:gap-6 mt-3 sm:mt-4">
+        <!-- Customize Button -->
+        <button id="btn-open-icon-kit" aria-label="Customize your icon" title="Customize" class="wd-focusable relative group w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 flex items-center justify-center rounded-2xl sm:rounded-[1.5rem] bg-neutral-900/80 backdrop-blur-md border border-neutral-700 shadow-xl hover:bg-neutral-800 hover:border-neutral-500 hover:-translate-y-1 active:scale-95 transition-all duration-300 cursor-pointer">
+          <i data-lucide="square-user" class="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-neutral-400 group-hover:text-white transition-colors"></i>
+          <span class="absolute -bottom-9 text-[10px] sm:text-xs font-medium text-neutral-500 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none hidden sm:block whitespace-nowrap">Customize</span>
+        </button>
+
+        <!-- Play Button -->
+        <button id="start-btn" aria-label="Start game" class="wd-focusable relative group w-28 h-28 sm:w-32 sm:h-32 md:w-36 md:h-36 flex items-center justify-center rounded-[1.75rem] sm:rounded-[2rem] md:rounded-[2.25rem] bg-white shadow-[0_0_50px_-15px_rgba(255,255,255,0.5)] hover:bg-neutral-100 hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer border border-white/40">
+          <i data-lucide="play" class="w-10 h-10 sm:w-12 sm:h-12 fill-neutral-950 text-neutral-950 translate-x-1 transition-transform group-hover:translate-x-2"></i>
+          <span class="sr-only">Start Game</span>
+        </button>
+
+        <!-- Pattern Editor Button -->
+        <button id="btn-open-editor" aria-label="Open pattern editor" title="Pattern editor" class="wd-focusable relative group w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 flex items-center justify-center rounded-2xl sm:rounded-[1.5rem] bg-neutral-900/80 backdrop-blur-md border border-neutral-700 shadow-xl hover:bg-neutral-800 hover:border-neutral-500 hover:-translate-y-1 active:scale-95 transition-all duration-300 cursor-pointer">
+          <i data-lucide="pen-tool" class="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-neutral-400 group-hover:text-white transition-colors"></i>
+          <span class="absolute -bottom-9 text-[10px] sm:text-xs font-medium text-neutral-500 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none hidden sm:block whitespace-nowrap">Editor</span>
+        </button>
+      </div>
+      <span id="subtitle" class="mt-2 sm:mt-2.5 text-[10px] sm:text-xs font-medium tracking-wide text-neutral-500 opacity-80">Press Space or Click</span>
+
+      <!-- Game options: stacked rows under the play button -->
+      <div class="flex flex-col items-center gap-2 mt-3 sm:mt-4">
+        <span class="text-[9px] sm:text-[10px] font-semibold tracking-[0.3em] text-neutral-500 uppercase">Game Options</span>
+        <div id="mode-selector" class="grid grid-cols-3 w-52 sm:w-60 gap-1 bg-neutral-900/80 p-1 sm:p-1.5 rounded-xl border border-neutral-700 backdrop-blur-md shadow-inner" role="group" aria-label="Difficulty">
+          <button id="mode-easy" class="wd-focusable px-2 py-1.5 sm:py-2 rounded-md bg-neutral-800 text-neutral-400 border border-neutral-700 hover:text-white transition-colors text-xs sm:text-sm cursor-pointer">Easy</button>
+          <button id="mode-medium" class="wd-focusable px-2 py-1.5 sm:py-2 rounded-md bg-white text-neutral-950 font-medium border border-white transition-colors text-xs sm:text-sm cursor-pointer">Medium</button>
+          <button id="mode-hard" class="wd-focusable px-2 py-1.5 sm:py-2 rounded-md bg-neutral-800 text-neutral-400 border border-neutral-700 hover:text-white transition-colors text-xs sm:text-sm cursor-pointer">Hard</button>
+        </div>
+        <div id="size-selector" class="grid grid-cols-2 w-52 sm:w-60 gap-1 bg-neutral-900/80 p-1 sm:p-1.5 rounded-xl border border-neutral-700 backdrop-blur-md shadow-inner" role="group" aria-label="Wave size">
+          <button id="size-normal" class="wd-focusable px-2 py-1.5 sm:py-2 rounded-md bg-white text-neutral-950 font-medium border border-white transition-colors text-xs sm:text-sm cursor-pointer">Normal</button>
+          <button id="size-mini" class="wd-focusable px-2 py-1.5 sm:py-2 rounded-md bg-neutral-800 text-neutral-400 border border-neutral-700 hover:text-white transition-colors text-xs sm:text-sm cursor-pointer">Mini</button>
+        </div>
+      </div>
     </div>
 
-    <!-- Center Row: Play + Customize + Editor -->
-    <div id="center-row" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center gap-6 sm:gap-10 pointer-events-auto z-20">
-      <!-- Customize Button -->
-      <button id="btn-open-icon-kit" aria-label="Customize your icon" title="Customize" class="wd-focusable relative group w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 flex items-center justify-center rounded-[1.5rem] sm:rounded-[1.75rem] md:rounded-[2rem] bg-neutral-900/80 backdrop-blur-md border border-neutral-700 shadow-xl hover:bg-neutral-800 hover:border-neutral-500 hover:-translate-y-1 transition-all duration-300 cursor-pointer">
-        <i data-lucide="square-user" class="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-neutral-400 group-hover:text-white transition-colors"></i>
-        <span class="absolute -bottom-9 text-[10px] sm:text-xs font-medium text-neutral-500 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none hidden sm:block whitespace-nowrap">Customize</span>
-      </button>
-
-      <!-- Play Button -->
-      <button id="start-btn" aria-label="Start game" class="wd-focusable relative group w-32 h-32 sm:w-36 sm:h-36 md:w-44 md:h-44 flex items-center justify-center rounded-[2rem] sm:rounded-[2.25rem] md:rounded-[2.5rem] bg-white shadow-[0_0_50px_-15px_rgba(255,255,255,0.5)] hover:bg-neutral-100 hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer border border-white/40">
-        <i data-lucide="play" class="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 fill-neutral-950 text-neutral-950 translate-x-1 transition-transform group-hover:translate-x-2"></i>
-        <span class="sr-only">Start Game</span>
-        <span id="subtitle" class="absolute -bottom-10 text-[10px] sm:text-xs font-medium text-neutral-500 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-md pointer-events-none">Press Space or Click</span>
-      </button>
-
-      <!-- Pattern Editor Button -->
-      <button id="btn-open-editor" aria-label="Open pattern editor" title="Pattern editor" class="wd-focusable relative group w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 flex items-center justify-center rounded-[1.5rem] sm:rounded-[1.75rem] md:rounded-[2rem] bg-neutral-900/80 backdrop-blur-md border border-neutral-700 shadow-xl hover:bg-neutral-800 hover:border-neutral-500 hover:-translate-y-1 transition-all duration-300 cursor-pointer">
-        <i data-lucide="pen-tool" class="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-neutral-400 group-hover:text-white transition-colors"></i>
-        <span class="absolute -bottom-9 text-[10px] sm:text-xs font-medium text-neutral-500 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none hidden sm:block whitespace-nowrap">Editor</span>
-      </button>
-    </div>
-
-    <!-- Bottom Row: Left (Profile + Socials + Version) | Right (Quick actions + Mode/Size) -->
-    <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between w-full pointer-events-auto gap-4 sm:gap-6">
-      <!-- Left: Profile / Socials -->
-      <div class="flex flex-col items-center sm:items-start gap-3 sm:gap-4">
-        <div class="flex items-center gap-2 sm:gap-3">
-          <span id="player-name-label" class="hidden sm:block text-[10px] sm:text-xs font-medium tracking-wide text-neutral-500 uppercase opacity-60">Player 1</span>
-          <button id="btn-profile" aria-label="Open profile" title="Profile &amp; stats" class="wd-focusable w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full border border-neutral-700 bg-neutral-900/80 backdrop-blur-md flex items-center justify-center shadow-lg hover:border-neutral-500 transition-all duration-300 cursor-pointer">
-            <i data-lucide="user" class="text-neutral-400 w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8"></i>
-          </button>
-        </div>
-        <div class="hidden sm:flex gap-2 mt-1">
-          <button id="btn-share-x" aria-label="Share your best score on X" title="Share on X" class="wd-focusable w-8 h-8 sm:w-9 sm:h-9 rounded-lg border border-neutral-800 bg-neutral-900/80 flex items-center justify-center hover:bg-neutral-800 transition-colors group cursor-pointer">
-            <svg viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4 text-neutral-500 group-hover:text-white transition-colors" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-          </button>
-          <button id="btn-share-ig" aria-label="Share the game (opens share sheet or copies link)" title="Share game" class="wd-focusable w-8 h-8 sm:w-9 sm:h-9 rounded-lg border border-neutral-800 bg-neutral-900/80 flex items-center justify-center hover:bg-neutral-800 transition-colors group cursor-pointer">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 text-neutral-500 group-hover:text-[#E1306C] transition-colors" aria-hidden="true"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"></line></svg>
-          </button>
-          <a id="btn-github" href="https://github.com/Gourab775" target="_blank" rel="noopener noreferrer" aria-label="Visit the maker on GitHub" title="Maker on GitHub" class="wd-focusable w-8 h-8 sm:w-9 sm:h-9 rounded-lg border border-neutral-800 bg-neutral-900/80 flex items-center justify-center hover:bg-neutral-800 transition-colors group cursor-pointer">
-            <svg viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4 text-neutral-500 group-hover:text-white transition-colors" aria-hidden="true"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
-          </a>
-        </div>
-        <span class="hidden sm:block text-[10px] sm:text-xs font-medium tracking-wide text-neutral-500 uppercase opacity-50">v2.2.0</span>
+    <!-- Bottom bar: socials + version (left) • streak & pass chip (right) -->
+    <div class="flex items-center justify-between gap-2 pointer-events-auto">
+      <div class="flex items-center gap-1.5 sm:gap-2">
+        <button id="btn-share-x" aria-label="Share your best score on X" title="Share on X" class="wd-focusable w-8 h-8 sm:w-9 sm:h-9 rounded-lg border border-neutral-800 bg-neutral-900/80 flex items-center justify-center hover:bg-neutral-800 transition-colors group cursor-pointer">
+          <svg viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4 text-neutral-500 group-hover:text-white transition-colors" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+        </button>
+        <button id="btn-share-ig" aria-label="Share the game (opens share sheet or copies link)" title="Share game" class="wd-focusable w-8 h-8 sm:w-9 sm:h-9 rounded-lg border border-neutral-800 bg-neutral-900/80 flex items-center justify-center hover:bg-neutral-800 transition-colors group cursor-pointer">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 text-neutral-500 group-hover:text-[#E1306C] transition-colors" aria-hidden="true"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"></line></svg>
+        </button>
+        <a id="btn-github" href="https://github.com/Gourab775" target="_blank" rel="noopener noreferrer" aria-label="Visit the maker on GitHub" title="Maker on GitHub" class="wd-focusable w-8 h-8 sm:w-9 sm:h-9 rounded-lg border border-neutral-800 bg-neutral-900/80 flex items-center justify-center hover:bg-neutral-800 transition-colors group cursor-pointer">
+          <svg viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4 text-neutral-500 group-hover:text-white transition-colors" aria-hidden="true"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+        </a>
+        <span id="home-version" class="hidden md:block text-[10px] font-medium tracking-wide text-neutral-600 uppercase opacity-70 ml-1">v3.0.0</span>
       </div>
 
-      <!-- Right: Quick actions + Mode/Size -->
-      <div class="flex flex-col items-end sm:items-end gap-4 sm:gap-6 w-full">
-        <!-- Quick actions -->
-        <div id="quick-actions" class="flex items-center justify-center gap-2 sm:gap-3 w-full">
-          <button id="btn-open-daily" aria-label="Daily reward gift" title="Daily reward" class="wd-focusable relative w-10 h-10 sm:w-12 sm:h-12 rounded-full border border-neutral-800 bg-neutral-900/80 backdrop-blur-md flex items-center justify-center hover:bg-neutral-800 hover:scale-105 active:scale-95 transition-all duration-300 group shadow-lg cursor-pointer">
-            <i data-lucide="gift" class="w-5 h-5 sm:w-6 sm:h-6 text-neutral-400 group-hover:text-rose-300 transition-colors"></i>
-            <span id="daily-dot" class="hidden absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-rose-400 shadow-[0_0_10px_2px_rgba(251,113,133,0.6)]"></span>
-          </button>
-          <button id="btn-open-scores" aria-label="Past scores" title="Past scores" class="wd-focusable w-10 h-10 sm:w-12 sm:h-12 rounded-full border border-neutral-800 bg-neutral-900/80 backdrop-blur-md flex items-center justify-center hover:bg-neutral-800 hover:scale-105 active:scale-95 transition-all duration-300 group shadow-lg cursor-pointer">
-            <i data-lucide="trophy" class="w-5 h-5 sm:w-6 sm:h-6 text-neutral-400 group-hover:text-amber-400 transition-colors"></i>
-          </button>
-          <button id="btn-open-settings" aria-label="Settings" title="Settings" class="wd-focusable w-10 h-10 sm:w-12 sm:h-12 rounded-full border border-neutral-800 bg-neutral-900/80 backdrop-blur-md flex items-center justify-center hover:bg-neutral-800 hover:scale-105 active:scale-95 transition-all duration-300 group shadow-lg cursor-pointer">
-            <i data-lucide="settings" class="w-5 h-5 sm:w-6 sm:h-6 text-neutral-400 group-hover:text-white transition-colors"></i>
-          </button>
-          <button id="btn-open-changelog" aria-label="Leaderboard" title="Leaderboard" class="wd-focusable w-10 h-10 sm:w-12 sm:h-12 rounded-full border border-neutral-800 bg-neutral-900/80 backdrop-blur-md flex items-center justify-center hover:bg-neutral-800 hover:scale-105 active:scale-95 transition-all duration-300 group shadow-lg cursor-pointer">
-            <i data-lucide="bar-chart-2" class="w-5 h-5 sm:w-6 sm:h-6 text-neutral-400 group-hover:text-green-400 transition-colors"></i>
-          </button>
-          <button id="btn-open-credits" aria-label="About and credits" title="Credits" class="wd-focusable w-10 h-10 sm:w-12 sm:h-12 rounded-full border border-neutral-800 bg-neutral-900/80 backdrop-blur-md flex items-center justify-center hover:bg-neutral-800 hover:scale-105 active:scale-95 transition-all duration-300 group shadow-lg cursor-pointer">
-            <i data-lucide="info" class="w-5 h-5 sm:w-6 sm:h-6 text-neutral-400 group-hover:text-blue-400 transition-colors"></i>
-          </button>
-          <button id="btn-toggle-music" aria-label="Toggle music" title="Music on/off" class="wd-focusable w-10 h-10 sm:w-12 sm:h-12 rounded-full border border-neutral-800 bg-neutral-900/80 backdrop-blur-md flex items-center justify-center hover:bg-neutral-800 hover:scale-105 active:scale-95 transition-all duration-300 group shadow-lg cursor-pointer">
-            <i data-lucide="music" class="w-5 h-5 sm:w-6 sm:h-6 text-neutral-400 group-hover:text-purple-400 transition-colors"></i>
-          </button>
-        </div>
-
-        <!-- Mode & Size Selectors -->
-        <div class="flex flex-col items-end gap-3 sm:gap-4 w-full">
-          <span class="text-[10px] sm:text-xs font-medium tracking-wide text-neutral-500 uppercase opacity-60 mb-1">Game Options</span>
-          <div class="flex flex-col items-end gap-2">
-            <div id="mode-selector" class="inline-flex items-stretch justify-center gap-1 w-40 sm:w-44 bg-neutral-900/80 p-1 sm:p-1.5 rounded-xl border border-neutral-700 backdrop-blur-md shadow-inner" role="group" aria-label="Difficulty">
-              <button id="mode-easy" class="wd-focusable flex-1 px-2 py-1.5 sm:py-2 rounded-md bg-neutral-800 text-neutral-400 border border-neutral-700 hover:text-white transition-colors text-xs sm:text-sm cursor-pointer">Easy</button>
-              <button id="mode-medium" class="wd-focusable flex-1 px-2 py-1.5 sm:py-2 rounded-md bg-white text-neutral-950 font-medium border border-white transition-colors text-xs sm:text-sm cursor-pointer">Medium</button>
-              <button id="mode-hard" class="wd-focusable flex-1 px-2 py-1.5 sm:py-2 rounded-md bg-neutral-800 text-neutral-400 border border-neutral-700 hover:text-white transition-colors text-xs sm:text-sm cursor-pointer">Hard</button>
-            </div>
-            <div id="size-selector" class="inline-flex items-stretch justify-center gap-1 w-40 sm:w-44 bg-neutral-900/80 p-1 sm:p-1.5 rounded-xl border border-neutral-700 backdrop-blur-md shadow-inner" role="group" aria-label="Wave size">
-              <button id="size-normal" class="wd-focusable flex-1 px-2 py-1.5 sm:py-2 rounded-md bg-white text-neutral-950 font-medium border border-white transition-colors text-xs sm:text-sm cursor-pointer">Normal</button>
-              <button id="size-mini" class="wd-focusable flex-1 px-2 py-1.5 sm:py-2 rounded-md bg-neutral-800 text-neutral-400 border border-neutral-700 hover:text-white transition-colors text-xs sm:text-sm cursor-pointer">Mini</button>
-            </div>
-          </div>
-        </div>
+      <div id="home-streak-chip" class="flex items-center gap-2 sm:gap-2.5 rounded-full border border-neutral-800 bg-neutral-900/70 backdrop-blur-md px-3 py-1.5 sm:px-3.5 shadow-lg">
+        <span class="flex items-center gap-1 text-[10px] sm:text-xs font-semibold text-orange-300/90" title="Daily streak">
+          <i data-lucide="flame" class="w-3.5 h-3.5"></i><span id="home-streak-value">0</span>
+        </span>
+        <span class="w-px h-3.5 bg-neutral-800"></span>
+        <span class="flex items-center gap-1 text-[10px] sm:text-xs font-semibold text-amber-300/90" title="Waver Pass level">
+          <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-300/80"></i><span id="home-pass-value">LV 1</span>
+        </span>
       </div>
     </div>
   </div>
@@ -346,7 +368,7 @@
         <h2 class="text-4xl font-semibold tracking-tight text-white mb-8 drop-shadow-md">Wave Dash</h2>
         <div class="w-full bg-neutral-900 border border-neutral-800 rounded-xl p-8 text-left mb-8 shadow-lg">
           <p class="text-neutral-300 text-sm leading-relaxed">
-            Wave Dash is a one-button neon wave-riding game. Hold to glide up, release to dive down, and thread your wave through the gaps without crashing. Every obstacle passed is a point â€” every crash starts a new attempt.
+            Wave Dash is a one-button neon wave-riding game. Hold to glide up, release to dive down, and thread your wave through the gaps without crashing. Every obstacle passed is a point — every crash starts a new attempt.
           </p>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1 mt-5 text-sm text-neutral-400">
             <span class="text-neutral-500 uppercase text-xs tracking-wider">Fly up</span><span>Hold Space / Click / Touch</span>
@@ -357,7 +379,7 @@
           <div class="mt-5 border-t border-neutral-800 pt-4 text-xs text-neutral-500 space-y-1">
             <p>Engine: HTML5 Canvas 2D &bull; Shell: Next.js 16 + Tailwind CSS &bull; Icons: Lucide</p>
             <p>Soundtrack: original synthwave tracks rendered in-house, royalty-free.</p>
-            <p>Version 2.2.0 &bull; Progress saved locally on your device &bull; Secure sign-in by Clerk</p>
+            <p>Version 3.0.0 &bull; Progress saved locally on your device &bull; Secure sign-in by Clerk</p>
           </div>
         </div>
         <div class="flex flex-col items-center gap-3 mb-8">
@@ -479,6 +501,46 @@
       </div>
     </div>
 
+    <!-- Waver Pass (Season rewards + Missions) -->
+    <div id="season-modal" class="wd-guard hidden absolute inset-0 z-[60] flex flex-col items-center justify-center bg-neutral-950/95 backdrop-blur-md transition-opacity" role="dialog" aria-modal="true" aria-label="Waver Pass">
+      <div class="w-full max-w-xl px-4 sm:px-6 flex flex-col items-center max-h-[94vh] overflow-y-auto py-4">
+        <h2 class="text-3xl sm:text-4xl font-semibold tracking-tight text-white mb-1 drop-shadow-md">Waver Pass</h2>
+        <p class="text-[11px] sm:text-xs text-neutral-500 mb-4">Level up by scoring — every level unlocks a new trail color.</p>
+
+        <div class="flex items-center gap-2 mb-5 bg-neutral-900/80 border border-neutral-800 rounded-full p-1">
+          <button id="pass-tab-season" class="wd-focusable px-4 sm:px-5 py-1.5 rounded-full text-xs sm:text-sm font-semibold bg-white text-neutral-950 cursor-pointer">Season</button>
+          <button id="pass-tab-missions" class="wd-focusable px-4 sm:px-5 py-1.5 rounded-full text-xs sm:text-sm font-semibold text-neutral-400 hover:text-white transition-colors cursor-pointer">Missions</button>
+        </div>
+
+        <div id="pass-season-panel" class="w-full flex flex-col items-center">
+          <div class="w-full bg-neutral-900/70 border border-neutral-800 rounded-2xl px-4 py-3 text-left mb-3 flex items-center gap-4">
+            <div class="text-center shrink-0">
+              <div class="text-[9px] font-bold tracking-[0.2em] text-neutral-500 uppercase">Level</div>
+              <div id="pass-level-big" class="text-3xl font-bold text-white tabular-nums leading-none">1</div>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between text-[10px] sm:text-xs font-semibold text-neutral-400 mb-1.5">
+                <span id="pass-xp-sub" class="tabular-nums">0 / 65 XP</span>
+                <span id="pass-xp-total" class="text-neutral-600 tabular-nums">total 0 XP</span>
+              </div>
+              <div class="h-2.5 w-full rounded-full bg-neutral-800 overflow-hidden">
+                <div id="pass-xp-bar" class="h-full rounded-full bg-gradient-to-r from-rose-400 via-amber-300 to-emerald-300 transition-[width] duration-500" style="width:0%"></div>
+              </div>
+            </div>
+          </div>
+          <div id="pass-reward-strip" class="w-full flex gap-2 overflow-x-auto pb-2"></div>
+          <div id="pass-reward-detail" class="w-full bg-neutral-900/70 border border-neutral-800/80 rounded-xl px-4 py-3 text-sm text-neutral-300 mt-1 min-h-[3.2rem]"></div>
+        </div>
+
+        <div id="pass-missions-panel" class="hidden w-full flex-col">
+          <div id="pass-missions-list" class="w-full flex flex-col gap-2"></div>
+          <p class="text-[11px] text-neutral-500 text-center mt-3">Finish missions to claim bonus XP — claim one and a fresh mission rolls in.</p>
+        </div>
+
+        <button id="btn-close-pass" class="wd-focusable mt-4 px-8 py-3 rounded-full bg-white text-neutral-950 font-medium text-lg hover:bg-neutral-200 active:scale-95 transition-all shadow-[0_0_20px_-5px_rgba(255,255,255,0.3)] cursor-pointer">Close</button>
+      </div>
+    </div>
+
     <!-- Profile Modal -->
     <div id="profile-modal" class="wd-guard hidden absolute inset-0 z-[60] flex flex-col items-center justify-center bg-neutral-950/95 backdrop-blur-md transition-opacity" role="dialog" aria-modal="true" aria-label="Profile">
       <div class="text-center w-full max-w-lg px-8 flex flex-col items-center">
@@ -549,18 +611,53 @@
 
     <!-- Game Over Overlay -->
     <div id="gameover-overlay" class="wd-guard hidden absolute inset-0 z-[58] flex flex-col items-center justify-center bg-neutral-950/85 backdrop-blur-md" role="dialog" aria-modal="true" aria-label="Run ended">
-      <p id="go-attempt" class="text-xs uppercase tracking-[0.3em] text-neutral-500 mb-4">Attempt 1</p>
-      <h2 class="text-6xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-br from-white to-neutral-500 mb-6 drop-shadow-lg">Crashed!</h2>
-      <span id="go-score" class="text-8xl font-semibold text-white tabular-nums leading-none">0</span>
-      <div id="go-best-row" class="flex items-center gap-2 text-neutral-400 mt-5 mb-8">
-        <i data-lucide="crown" class="w-4 h-4 text-amber-400"></i>
-        <span>Best</span>
-        <span id="go-best" class="text-white font-semibold tabular-nums">0</span>
-        <span id="go-newbest" class="hidden px-2 py-0.5 rounded-full bg-amber-400/15 text-amber-300 text-xs font-bold uppercase tracking-widest border border-amber-400/30 ml-1">New Best!</span>
-      </div>
-      <div class="flex items-center gap-3">
-        <button id="go-retry" class="wd-focusable px-8 py-4 rounded-full bg-white text-neutral-950 font-bold text-lg hover:bg-neutral-200 hover:scale-[1.03] active:scale-95 transition-all shadow-[0_0_50px_-10px_rgba(255,255,255,0.6)] cursor-pointer">Retry (Space)</button>
-        <button id="go-menu" class="wd-focusable px-6 py-4 rounded-full bg-neutral-900/80 text-neutral-300 font-medium border border-neutral-800 hover:bg-neutral-800 hover:text-white transition-all cursor-pointer">Menu</button>
+      <div class="w-full max-w-sm px-5 sm:px-6 flex flex-col items-center text-center max-h-[94vh] overflow-y-auto py-4">
+        <p id="go-attempt" class="text-[10px] sm:text-xs uppercase tracking-[0.3em] text-neutral-500 mb-2">Attempt 1</p>
+        <h2 class="text-4xl sm:text-5xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-br from-white to-neutral-500 mb-3 drop-shadow-lg">Crashed!</h2>
+        <span id="go-score" class="text-6xl sm:text-7xl font-semibold text-white tabular-nums leading-none">0</span>
+        <div id="go-best-row" class="flex items-center gap-2 text-neutral-400 mt-3">
+          <i data-lucide="crown" class="w-4 h-4 text-amber-400"></i>
+          <span>Best</span>
+          <span id="go-best" class="text-white font-semibold tabular-nums">0</span>
+          <span id="go-newbest" class="hidden px-2 py-0.5 rounded-full bg-amber-400/15 text-amber-300 text-xs font-bold uppercase tracking-widest border border-amber-400/30 ml-1">New Best!</span>
+        </div>
+
+        <!-- Level-up banner -->
+        <div id="go-levelup" class="hidden w-full rounded-2xl border border-amber-400/40 bg-amber-400/10 px-4 py-2.5 flex-col items-center gap-1 mt-3">
+          <span class="flex items-center gap-2 text-[10px] font-bold tracking-[0.3em] text-amber-300 uppercase">
+            <i data-lucide="party-popper" class="w-3.5 h-3.5"></i> Level Up!
+          </span>
+          <span id="go-levelup-text" class="text-sm font-semibold text-amber-200">Level 2 unlocked</span>
+          <span id="go-levelup-reward" class="hidden items-center gap-1.5 text-[11px] text-amber-100/80">
+            <span id="go-levelup-swatch" class="w-3 h-3 rounded-full border border-white/30"></span><span id="go-levelup-color-name"></span>
+          </span>
+        </div>
+
+        <!-- XP / pass progress -->
+        <div class="w-full bg-neutral-900/80 border border-neutral-800 rounded-2xl px-4 py-3 text-left mt-3">
+          <div class="flex items-center justify-between text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-neutral-400 mb-2">
+            <span class="flex items-center gap-1.5"><i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-300/90"></i> Waver Pass&nbsp;<span id="go-xp-level" class="text-white">1</span></span>
+            <span id="go-xp-gain" class="text-emerald-300 tabular-nums">+0 XP</span>
+          </div>
+          <div class="h-2.5 w-full rounded-full bg-neutral-800 overflow-hidden">
+            <div id="go-xp-bar" class="h-full rounded-full bg-gradient-to-r from-rose-400 via-amber-300 to-emerald-300 transition-[width] duration-700" style="width:0%"></div>
+          </div>
+          <div id="go-xp-sub" class="text-[10px] text-neutral-500 mt-1.5 tabular-nums">0 / 65 XP to Level 2</div>
+        </div>
+
+        <!-- Missions -->
+        <div class="w-full bg-neutral-900/80 border border-neutral-800 rounded-2xl px-4 py-3 text-left mt-2">
+          <h3 class="flex items-center gap-1.5 text-[10px] sm:text-xs font-semibold uppercase tracking-[0.2em] text-neutral-400 mb-2">
+            <i data-lucide="target" class="w-3.5 h-3.5 text-rose-300/90"></i> Missions
+          </h3>
+          <div id="go-missions" class="grid grid-cols-1 gap-1.5"></div>
+          <p id="go-missions-empty" class="hidden text-[11px] text-neutral-500">All caught up — missions finish right here, then new ones roll in.</p>
+        </div>
+
+        <div class="flex items-center gap-3 mt-4">
+          <button id="go-retry" class="wd-focusable px-8 py-3.5 rounded-full bg-white text-neutral-950 font-bold text-base hover:bg-neutral-200 hover:scale-[1.03] active:scale-95 transition-all shadow-[0_0_50px_-10px_rgba(255,255,255,0.6)] cursor-pointer">Retry (Space)</button>
+          <button id="go-menu" class="wd-focusable px-6 py-3.5 rounded-full bg-neutral-900/80 text-neutral-300 font-medium border border-neutral-800 hover:bg-neutral-800 hover:text-white transition-all cursor-pointer">Menu</button>
+        </div>
       </div>
     </div>
 
@@ -576,7 +673,7 @@
   <script defer src="public/assets/js/lucide.min.js"></script>
   <script>
     /* =====================================================================
-       Wave Dash 2.0 â€” WD core
+       Wave Dash 2.0 — WD core
        Versioned local save, migration, shared utils, sfx, toasts.
        ===================================================================== */
     window.WD = (function () {
@@ -584,7 +681,7 @@
 
       var SAVE_KEY = 'wd.save.v2';
       var LEGACY_KEYS = ['wave-dash-past-scores', 'wave-dash-player-name'];
-      var VERSION = '2.2.0';
+      var VERSION = '3.0.0';
 
       var SPECIAL_COLORS = [
         { c: '#00f5d4', n: 'Aqua Neon' },
@@ -619,6 +716,7 @@
       }
 
       /* ---------------- Icon unlock configuration ---------------- */
+      /* Icons unlock three ways: free at start ('wave'), score milestones, and daily rewards. */
       var ICON_LABELS = {
         wave: 'Wave', tree: 'Tree', triangle: 'Triangle', respirator: 'Respirator',
         arrowhead: 'Arrowhead', spaceship: 'Spaceship', bullet: 'Bullet',
@@ -646,6 +744,91 @@
         { c: '#b388ff', n: 'Nebula Prism', score: 100 }
       ];
 
+      /* ---------------- Waver Pass (Season) ----------------
+         Subway-Surfers-style progression: every run grants XP, XP raises the
+         pass level, and every one of the 40 levels hands out a trail color. */
+      var PASS_MAX_LEVEL = 40;
+      var PASS_COLORS = [
+        { c: '#eaf6ff', n: 'Songbook Ice' },
+        { c: '#01baef', n: 'Lagoon Rush' },
+        { c: '#ff7a59', n: 'Coral Bloom' },
+        { c: '#8900e1', n: 'Ultraviolet' },
+        { c: '#38fbcc', n: 'Mint Drift' },
+        { c: '#ff6ea8', n: 'Rose Harbor' },
+        { c: '#ffc63c', n: 'Solar Flare' },
+        { c: '#0e6fff', n: 'Deep Tide', g: 1 },
+        { c: '#ffa7c4', n: 'Sakura Wave' },
+        { c: '#b4f8ff', n: 'Prism Prime', g: 1 },
+        { c: '#7cff6b', n: 'Acid Lime' },
+        { c: '#ff9e00', n: 'Tangerine' },
+        { c: '#c77dff', n: 'Orchid Bloom' },
+        { c: '#41ead4', n: 'Aurora Mint', g: 1 },
+        { c: '#f4a259', n: 'Dune Amber' },
+        { c: '#56cbf9', n: 'Sky Signal' },
+        { c: '#ff5964', n: 'Scarlet Wake' },
+        { c: '#9ff0d2', n: 'Seafoam Glass' },
+        { c: '#ffc4d6', n: 'Petal Pink' },
+        { c: '#d0f2d1', n: 'Willow Light' },
+        { c: '#8d86c9', n: 'Dusk Iris' },
+        { c: '#ffbe0b', n: 'Marigold Pop', g: 1 },
+        { c: '#3ddad7', n: 'Reef Glass' },
+        { c: '#e55f8f', n: 'Rose Quartz' },
+        { c: '#92d5e6', n: 'Frostline' },
+        { c: '#ffb703', n: 'Honey Glow' },
+        { c: '#6a67ce', n: 'Nebula Dust' },
+        { c: '#f94144', n: 'Signal Red', g: 1 },
+        { c: '#94d2bd', n: 'Jade Breeze' },
+        { c: '#ffdd95', n: 'Sunbeam Gold' }
+      ];
+      function hslToHex(h, s, l) {
+        s /= 100; l /= 100;
+        var k = function (n) { return (n + h / 30) % 12; };
+        var a = s * Math.min(l, 1 - l);
+        var f = function (n) {
+          var v = l - a * Math.max(-1, Math.min(k(n) - 3, 9 - k(n), 1));
+          return Math.round(255 * v).toString(16).padStart(2, '0');
+        };
+        return '#' + f(0) + f(8) + f(4);
+      }
+      /* Reward for a pass level — 30 curated colors, then prismatic tiers. */
+      function passReward(level) {
+        var lv = Math.max(1, Math.floor(Number(level) || 0));
+        if (lv > PASS_MAX_LEVEL) return null;
+        if (lv <= PASS_COLORS.length) return PASS_COLORS[lv - 1];
+        return { c: hslToHex((lv * 47) % 360, 92, 62), n: 'Prism Tier ' + (lv - PASS_COLORS.length + 10), g: 1 };
+      }
+      /* XP that the hop level→level+1 costs (mildly escalating). */
+      function xpForNext(level) { return 40 + 25 * (Math.max(1, level | 0)); }
+      function levelInfo(xp) {
+        var level = 1;
+        var rem = Math.max(0, Math.floor(Number(xp) || 0));
+        while (level < PASS_MAX_LEVEL && rem >= xpForNext(level)) { rem -= xpForNext(level); level++; }
+        var maxed = level >= PASS_MAX_LEVEL;
+        return { level: level, into: rem, need: xpForNext(level), pct: maxed ? 1 : rem / xpForNext(level), xp: Math.max(0, Math.floor(Number(xp) || 0)), maxed: maxed };
+      }
+
+      /* ---------------- Missions — rotate like Subway Surfers ---------------- */
+      var MISSION_POOL = [
+        { id: 'score_run_t1', kind: 'score_run', goal: 8, xp: 60, text: 'Score {g} in a single run' },
+        { id: 'score_run_t2', kind: 'score_run', goal: 15, xp: 120, text: 'Score {g} in a single run' },
+        { id: 'score_run_t3', kind: 'score_run', goal: 25, xp: 200, text: 'Score {g} in a single run' },
+        { id: 'runs_5', kind: 'runs', goal: 5, xp: 60, text: 'Play {g} runs' },
+        { id: 'runs_10', kind: 'runs', goal: 10, xp: 110, text: 'Play {g} runs' },
+        { id: 'runs_25', kind: 'runs', goal: 25, xp: 180, text: 'Play {g} runs' },
+        { id: 'total_50', kind: 'total', goal: 50, xp: 90, text: 'Pass {g} obstacles in total' },
+        { id: 'total_150', kind: 'total', goal: 150, xp: 160, text: 'Pass {g} obstacles in total' },
+        { id: 'total_400', kind: 'total', goal: 400, xp: 260, text: 'Pass {g} obstacles in total' },
+        { id: 'best_20', kind: 'best', goal: 20, xp: 100, text: 'Reach a best score of {g}' },
+        { id: 'best_40', kind: 'best', goal: 40, xp: 180, text: 'Reach a best score of {g}' },
+        { id: 'best_75', kind: 'best', goal: 75, xp: 300, text: 'Reach a best score of {g}' },
+        { id: 'mode_hard_1', kind: 'mode_hard', goal: 1, xp: 80, text: 'Finish {g} run on Hard' },
+        { id: 'mode_hard_5', kind: 'mode_hard', goal: 5, xp: 150, text: 'Finish {g} runs on Hard' },
+        { id: 'size_mini_3', kind: 'size_mini', goal: 3, xp: 100, text: 'Finish {g} Mini-wave runs' },
+        { id: 'daily_1', kind: 'daily', goal: 1, xp: 80, text: 'Claim your Daily Reward' },
+        { id: 'icon_equip_3', kind: 'icon_equip', goal: 3, xp: 60, text: 'Switch your icon {g} times' }
+      ];
+
+      /* ---------------- Save shape ---------------- */
       function defaultSave() {
         return {
           version: 2,
@@ -666,7 +849,13 @@
           stats: { runs: 0, totalScore: 0 },
           daily: { lastClaim: '', streak: 0 },
           patterns: [],
-          hintRuns: 0
+          hintRuns: 0,
+          /* Waver Pass (season) + missions */
+          xp: 0,
+          iconEquips: 0,
+          runModes: { easy: 0, medium: 0, hard: 0 },
+          runSizes: { normal: 0, mini: 0 },
+          missions: { slots: [], used: [], completed: 0 }
         };
       }
 
@@ -700,11 +889,42 @@
           if ((d.best | 0) >= m.score && d.unlockedIcons.indexOf(m.icon) === -1) d.unlockedIcons.push(m.icon);
         });
         if (typeof d.wdUserId !== 'string') d.wdUserId = '';
+        if (!Array.isArray(d.patterns)) d.patterns = [];
         if (typeof d.best !== 'number' || !isFinite(d.best)) d.best = 0;
         if (typeof d.name !== 'string' || !d.name.trim()) d.name = '';
         d.stats.runs = Math.max(0, d.stats.runs | 0);
         d.stats.totalScore = Math.max(0, d.stats.totalScore | 0);
         d.attempts = Math.max(0, d.attempts | 0);
+        /* Waver Pass + missions fields (update-safe backfill). */
+        if (typeof d.xp !== 'number' || !isFinite(d.xp)) d.xp = 0;
+        d.xp = Math.max(0, d.xp | 0);
+        d.iconEquips = Math.max(0, d.iconEquips | 0);
+        if (!d.runModes || typeof d.runModes !== 'object') d.runModes = { easy: 0, medium: 0, hard: 0 };
+        d.runModes.easy = Math.max(0, d.runModes.easy | 0);
+        d.runModes.medium = Math.max(0, d.runModes.medium | 0);
+        d.runModes.hard = Math.max(0, d.runModes.hard | 0);
+        if (!d.runSizes || typeof d.runSizes !== 'object') d.runSizes = { normal: 0, mini: 0 };
+        d.runSizes.normal = Math.max(0, d.runSizes.normal | 0);
+        d.runSizes.mini = Math.max(0, d.runSizes.mini | 0);
+        if (!d.missions || typeof d.missions !== 'object') d.missions = { slots: [], used: [], completed: 0 };
+        if (!Array.isArray(d.missions.slots)) d.missions.slots = [];
+        if (!Array.isArray(d.missions.used)) d.missions.used = [];
+        d.missions.completed = Math.max(0, d.missions.completed | 0);
+        d.missions.slots = d.missions.slots
+          .filter(function (s) { return s && typeof s.id === 'string'; })
+          .slice(0, 3)
+          .map(function (s) { return { id: s.id, prog: Math.max(0, (s.prog | 0) || 0) }; });
+        /* Silently backfill every trail color the saved XP level has earned,
+           so existing players never miss a pass reward after an update. */
+        if (d.xp > 0 && Array.isArray(d.unlockedColors)) {
+          var _li = levelInfo(d.xp);
+          for (var _lv = 1; _lv <= _li.level; _lv++) {
+            var _pr = passReward(_lv);
+            if (!_pr) break;
+            var _known = d.unlockedColors.map(function (x) { return String(x).toLowerCase(); });
+            if (_known.indexOf(String(_pr.c).toLowerCase()) === -1) d.unlockedColors.push(_pr.c);
+          }
+        }
         return d;
       }
 
@@ -753,12 +973,12 @@
 
       function fmtDate(ts) {
         try { return new Date(ts).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }); }
-        catch (e) { return 'â€”'; }
+        catch (e) { return '—'; }
       }
 
       /* Unlock (and toast about) every score-milestone icon the player has now earned. */
       function checkIconMilestones(score) {
-        var s = WD.store;
+        var s = store;
         var target = Math.max(Math.max(0, score | 0), s.best | 0);
         var newly = [];
         ICON_MILESTONES.forEach(function (m) {
@@ -770,7 +990,7 @@
         LEVEL_COLOR_MILESTONES.forEach(function (m) {
           if (target >= m.score && s.unlockedColors.indexOf(m.c) === -1) s.unlockedColors.push(m.c);
         });
-        WD.persist();
+        persist();
         newly.forEach(function (m, i) {
           setTimeout(function () {
             toast('Icon unlocked: ' + (ICON_LABELS[m.icon] || m.icon) + ' — ' + m.score + '+ score earned!', 'good');
@@ -789,6 +1009,9 @@
           }
         });
       }
+
+      /* Silently register glitter-flagged pass colors into the sparkle system. */
+      PASS_COLORS.forEach(function (p) { if (p.g) GLITTER_SET.push(p.c.toLowerCase()); });
 
       /* ---- Toasts ---- */
       function toast(message, type) {
@@ -843,24 +1066,167 @@
         else if (kind === 'best') { blip(520, 780, 0.07); setTimeout(function () { blip(660, 990, 0.06); }, 100); setTimeout(function () { blip(780, 1180, 0.05); }, 200); }
       }
 
+      /* ---------------- Waver Pass + missions runtime ---------------- */
+
+      /* Live progress of a mission against the store (and a run payload). */
+      function missionProgressFor(def, payload) {
+        payload = payload || {};
+        switch (def && def.kind) {
+          case 'score_run': return Math.max(store.best | 0, payload.score | 0);
+          case 'runs': return store.stats.runs | 0;
+          case 'total': return store.stats.totalScore | 0;
+          case 'best': return store.best | 0;
+          case 'mode_hard': return ((store.runModes && store.runModes.hard) || 0) | 0;
+          case 'size_mini': return ((store.runSizes && store.runSizes.mini) || 0) | 0;
+          case 'daily': return store.daily.lastClaim ? 1 : 0;
+          case 'icon_equip': return store.iconEquips | 0;
+          default: return 0;
+        }
+      }
+
+      /* Fill the 3 rotating slots from the pool; alive progress is re-derived
+         from stats so nothing gets lost between sessions. */
+      function ensureMissions() {
+        var m = store.missions;
+        if (!m || typeof m !== 'object') { store.missions = m = { slots: [], used: [], completed: 0 }; }
+        if (!Array.isArray(m.slots)) m.slots = [];
+        if (!Array.isArray(m.used)) m.used = [];
+        while (m.slots.length < 3) {
+          var def = null;
+          for (var i = 0; i < MISSION_POOL.length; i++) {
+            var t = MISSION_POOL[i];
+            if (m.used.indexOf(t.id) === -1 && !m.slots.some(function (s) { return s.id === t.id; })) { def = t; break; }
+          }
+          if (!def) break;
+          m.used.push(def.id);
+          m.slots.push({ id: def.id, prog: missionProgressFor(def, {}) });
+        }
+        return m;
+      }
+
+      /* Refresh all slot progress; event tells which feed updated
+         ('run' | 'daily' | 'icon'). Returns the newly-finished defs. */
+      function bumpMissions(event, payload) {
+        payload = payload || {};
+        ensureMissions();
+        var finishedNew = [];
+        store.missions.slots.forEach(function (slot) {
+          var def = null;
+          for (var i = 0; i < MISSION_POOL.length; i++) {
+            if (MISSION_POOL[i].id === slot.id) { def = MISSION_POOL[i]; break; }
+          }
+          if (!def) return;
+          var touch = (event === 'run' && ['score_run', 'runs', 'total', 'best', 'mode_hard', 'size_mini'].indexOf(def.kind) !== -1) ||
+                      (event === 'daily' && def.kind === 'daily') ||
+                      (event === 'icon' && def.kind === 'icon_equip');
+          if (!touch) return;
+          var prog = missionProgressFor(def, payload);
+          var wasDone = prog >= def.goal;
+          if (prog !== (slot.prog | 0)) { persist(); }
+          slot.prog = prog;
+          if (wasDone) {
+            var isKnown = finishedNew.some(function (f) { return f.id === def.id; });
+            if (!isKnown) finishedNew.push(def);
+          }
+        });
+        if (finishedNew.length) {
+          persist();
+          finishedNew.forEach(function (d, i) {
+            setTimeout(function () {
+              toast('Mission complete — claim your ' + d.xp + ' XP bonus!', 'good');
+              sfx('gift');
+            }, i * 450);
+          });
+        }
+        return finishedNew;
+      }
+
+      /* Unlock + toast every trail color earned by the current XP level. */
+      function applyPassLevelUnlocks() {
+        var after = levelInfo(store.xp);
+        var rewards = [];
+        for (var lv = 1; lv <= after.level; lv++) {
+          var pr = passReward(lv);
+          if (!pr) break;
+          var lowered = store.unlockedColors.map(function (x) { return String(x).toLowerCase(); });
+          if (lowered.indexOf(String(pr.c).toLowerCase()) === -1) {
+            store.unlockedColors.push(pr.c);
+            rewards.push({ level: lv, color: pr });
+            persist();
+          }
+        }
+        rewards.forEach(function (r, i) {
+          setTimeout(function () {
+            toast('Waver Pass Lv ' + r.level + ': ' + r.color.n + ' trail unlocked!', 'good');
+            sfx('gift');
+            try { window.dispatchEvent(new CustomEvent('wd-colors-changed', { detail: { color: r.color.c } })); } catch (e) {}
+          }, 400 + i * 480);
+        });
+        try { window.dispatchEvent(new CustomEvent('wd-pass-changed', { detail: { level: after.level } })); } catch (e) {}
+        return { after: after, rewards: rewards };
+      }
+
+      /* Missions claim: grant the XP bonus, roll a replacement in. */
+      function claimMission(slotId) {
+        var m = ensureMissions();
+        var def = null;
+        var defIdx = -1;
+        for (var i = 0; i < m.slots.length; i++) {
+          if (m.slots[i].id === slotId) { defIdx = i; break; }
+        }
+        if (defIdx === -1) return 0;
+        for (var j = 0; j < MISSION_POOL.length; j++) { if (MISSION_POOL[j].id === m.slots[defIdx].id) { def = MISSION_POOL[j]; break; } }
+        if (!def) return 0;
+        if (missionProgressFor(def, {}) < def.goal) { toast('Mission not finished yet', 'bad'); return 0; }
+        var before = levelInfo(store.xp);
+        m.slots.splice(defIdx, 1);
+        m.completed = (m.completed | 0) + 1;
+        store.xp = (store.xp | 0) + def.xp;
+        ensureMissions();
+        persist();
+        sfx('best');
+        try { window.dispatchEvent(new CustomEvent('wd-pass-changed', { detail: { claim: def.id } })); } catch (e) {}
+        if (levelInfo(store.xp).level > before.level) {
+          toast('Level up! Level ' + levelInfo(store.xp).level + ' — bonus XP banked!', 'good');
+        }
+        return def.xp;
+      }
+
+      /* XP from a finished run (+50% bonus on a new best), unlocks + missions. */
+      function grantRunXp(score, wasBest) {
+        var gain = Math.max(0, Math.round((score | 0) * ((wasBest && score > 0) ? 1.5 : 1)));
+        var before = levelInfo(store.xp);
+        if (gain > 0) store.xp = (store.xp | 0) + gain;
+        var unlocked = applyPassLevelUnlocks();
+        if (gain > 0) persist();
+        var after = unlocked.after;
+        if (after.level > before.level) {
+          setTimeout(function () {
+            toast('LEVEL UP — Level ' + after.level + '!', 'good');
+            sfx('best');
+          }, 60);
+        }
+        return { gain: gain, before: before, after: after, levelsGained: after.level - before.level, rewards: unlocked.rewards };
+      }
+
       return {
         VERSION: VERSION,
         SAVE_KEY: SAVE_KEY,
         SPECIAL_COLORS: SPECIAL_COLORS,
         ICONS: {
-          wave: 'public/assets/icons/wave.png',
-          tree: 'public/assets/icons/tree.png',
-          triangle: 'public/assets/icons/triangle.webp',
-          respirator: 'public/assets/icons/respirator.png',
-          arrowhead: 'public/assets/icons/arrowhead.png',
-          spaceship: 'public/assets/icons/spaceship.png',
-          bullet: 'public/assets/icons/bullet.webp',
-          robot: 'public/assets/icons/robot.webp',
-          minimalistArrow: 'public/assets/icons/minimalistArrow.png',
-          cursor: 'public/assets/icons/cursor.webp',
-          energy: 'public/assets/icons/energy.webp',
-          sword: 'public/assets/icons/sword.webp',
-          spiral: 'public/assets/icons/spiral.webp'
+          wave: 'assets/icons/wave.png',
+          tree: 'assets/icons/tree.png',
+          triangle: 'assets/icons/triangle.webp',
+          respirator: 'assets/icons/respirator.png',
+          arrowhead: 'assets/icons/arrowhead.png',
+          spaceship: 'assets/icons/spaceship.png',
+          bullet: 'assets/icons/bullet.webp',
+          robot: 'assets/icons/robot.webp',
+          minimalistArrow: 'assets/icons/minimalistArrow.png',
+          cursor: 'assets/icons/cursor.webp',
+          energy: 'assets/icons/energy.webp',
+          sword: 'assets/icons/sword.webp',
+          spiral: 'assets/icons/spiral.webp'
         },
         ICON_LABELS: ICON_LABELS,
         ICON_MILESTONES: ICON_MILESTONES,
@@ -870,6 +1236,16 @@
         LEVEL_COLOR_MILESTONES: LEVEL_COLOR_MILESTONES,
         isGlitterHex: isGlitterHex,
         checkIconMilestones: checkIconMilestones,
+        PASS_MAX_LEVEL: PASS_MAX_LEVEL,
+        passReward: passReward,
+        levelInfo: levelInfo,
+        xpForNext: xpForNext,
+        MISSION_POOL: MISSION_POOL,
+        ensureMissions: ensureMissions,
+        missionProgressFor: missionProgressFor,
+        bumpMissions: bumpMissions,
+        claimMission: claimMission,
+        grantRunXp: grantRunXp,
         store: store,
         persist: persist,
         wipe: wipe,
@@ -887,7 +1263,7 @@
 
   <script>
     /* =====================================================================
-       Wave Dash 2.0 â€” Game engine
+       Wave Dash 2.0 — Game engine
        Canvas wave runner: modes, sizes, pattern runs, bot, pause, run log.
        ===================================================================== */
     (function () {
@@ -911,10 +1287,9 @@
       var menuMusic = document.getElementById('menu-music');
       var deathSfx = document.getElementById('death-sfx');
 
+      var hudScore = document.getElementById('hud-score');
       var bestDisplay = document.getElementById('best-display');
       var bestValue = document.getElementById('best-value');
-      var bestBadge = document.getElementById('best-badge');
-      var bestBadgeValue = document.getElementById('best-badge-value');
       var attemptLabel = document.getElementById('attempt-label');
       var customBadge = document.getElementById('custom-badge');
       var hintLabel = document.getElementById('hint-label');
@@ -956,7 +1331,7 @@
         customMiniTrailSize: false, miniTrailSizeValue: 8,
         solidTrail: false
       };
-      /* Hidden dev cheats â€” console-only (WD.engine.cheats). */
+      /* Hidden dev cheats — console-only (WD.engine.cheats). */
       var cheats = { noclip: false, speedhack: false, freeMode: false, crazyMode: false };
       var bot = { enabled: false };
       var botAutoRetryTimer = null;
@@ -978,23 +1353,37 @@
       function screenScale() {
         var w = window.innerWidth;
         var s = window.innerHeight;
+        /* phones & small screens: slightly slower so it stays passable */
         if (w <= 640 || s <= 736) return 0.85;
         if (w <= 1024) return 0.92;
         return 1;
       }
 
-      var WAVE_SPEED = MODES[currentMode].speed;
-      var FORWARD_SPEED = MODES[currentMode].speed;
       var OBSTACLE_WIDTH = 70;
-      var OBSTACLE_GAP = MODES[currentMode].gap;
-      var SPAWN_RATE = MODES[currentMode].spawnRate;
       var PATTERN_SPACING = 540;
       var PATTERN_ROWS = 10;
+
+      /* ---------------- Level-wise pacing ----------------
+         Every round moves through stages: each STAGE_SIZE obstacles nudges
+         the stage up, which smoothly ramps speed, tightens the gap and
+         quickens the spawn — a deterministic curve, never random fast/slow.
+         Stage 0 equals the selected difficulty's base values. */
+      var STAGE_SIZE = 10;
+      var STAGE_CAP = 14;
+      var STAGE_SPEED_STEP = 0.045;  /* +4.5% speed per stage */
+      var STAGE_GAP_STEP = 6;        /* px tighter gap per stage */
+      var STAGE_SPAWN_STEP = 0.93;   /* compound spawn quickening per stage */
+
+      var WAVE_SPEED = MODES[currentMode].speed;
+      var FORWARD_SPEED = MODES[currentMode].speed;
+      var OBSTACLE_GAP = MODES[currentMode].gap;
+      var SPAWN_RATE = MODES[currentMode].spawnRate;
+      var lastStage = 0;
 
       var currentWaveSize = WD.store.waveSize === 'mini' ? 'mini' : 'normal';
       var WAVE_SIZES = { normal: { size: 24, imgSize: 48 }, mini: { size: 12, imgSize: 24 } };
 
-      /* difficulty scaling: mini wave is tighter and faster too (still beatable) */
+      /* Re-derives the base difficulty after mode / wave-size changes. */
       function applyDifficulty() {
         var base = MODES[currentMode];
         var isMini = currentWaveSize === 'mini';
@@ -1005,6 +1394,45 @@
         SPAWN_RATE = Math.max(24, Math.round(base.spawnRate * sc * (isMini ? 0.95 : 1)));
       }
       applyDifficulty();
+
+      function stageFromScore() {
+        if (runPattern && runPattern.length) return 0; /* editor patterns stay on base pacing */
+        return Math.min(STAGE_CAP, Math.floor(Math.max(0, score | 0) / STAGE_SIZE));
+      }
+
+      /* Called every frame: keeps the racing values in sync with the stage. */
+      function applyStagePacing() {
+        var stage = stageFromScore();
+        if (stage !== lastStage) {
+          if (stage > lastStage && score > 0) flashStage(stage);
+          lastStage = stage;
+        }
+        if (stage === 0) { applyDifficulty(); return; }
+        var base = MODES[currentMode];
+        var isMini = currentWaveSize === 'mini';
+        var sc = screenScale();
+        var miniF = isMini ? 1.15 : 1;
+        FORWARD_SPEED = base.speed * sc * miniF * (1 + stage * STAGE_SPEED_STEP);
+        WAVE_SPEED = FORWARD_SPEED;
+        OBSTACLE_GAP = Math.max(124, base.gap / sc * (isMini ? 0.9 : 1) - stage * STAGE_GAP_STEP);
+        SPAWN_RATE = Math.max(30, base.spawnRate * sc * (isMini ? 0.95 : 1) * Math.pow(STAGE_SPAWN_STEP, stage));
+      }
+
+      var stageLabel = document.getElementById('stage-label');
+      function flashStage(stage) {
+        if (stageLabel) {
+          stageLabel.textContent = 'Stage ' + (stage + 1);
+          stageLabel.classList.remove('opacity-0');
+          stageLabel.classList.remove('hidden');
+          if (flashStage._timer) clearTimeout(flashStage._timer);
+          flashStage._timer = setTimeout(function () {
+            if (stageLabel) stageLabel.classList.add('hidden');
+            flashStage._timer = null;
+          }, 1300);
+        }
+        WD.toast('Stage ' + (stage + 1) + ' — speed up!', 'good');
+        try { if (navigator.vibrate) navigator.vibrate(15); } catch (e) {}
+      }
 
       var player = {
         x: 200,
@@ -1083,8 +1511,10 @@
       function updateMenuBest() {
         var best = WD.store.best;
         bestValue.textContent = best;
-        bestBadgeValue.textContent = best;
-        bestBadge.classList.toggle('hidden', best <= 0);
+        /* HUD lives in-run only; the home screen updates its chips via WD.ui.refreshHome. */
+        if (WD.ui && WD.ui.refreshHome) {
+          try { WD.ui.refreshHome(); } catch (e) {}
+        }
       }
       updateMenuBest();
 
@@ -1105,6 +1535,10 @@
         overlayReady = false;
         setTimeout(function () { overlayReady = true; }, 350);
         if (window.lucide) lucide.createIcons();
+        /* Level bar, XP gain and mission claims live on the end-screen. */
+        if (WD.ui && WD.ui.renderRunSummary) {
+          try { WD.ui.renderRunSummary(); } catch (e) {}
+        }
       }
 
       function retryRun() {
@@ -1164,7 +1598,12 @@
 
         scoreDisplay.textContent = '0';
         scoreDisplay.style.transform = 'scale(1)';
+        if (hudScore) hudScore.classList.remove('hidden');
         bestDisplay.classList.remove('hidden');
+        /* Fresh run — stage pacing restarts from zero. */
+        lastStage = 0;
+        if (stageLabel) stageLabel.classList.add('hidden');
+        if (flashStage._timer) { clearTimeout(flashStage._timer); flashStage._timer = null; }
 
         cancelAnimationFrame(animationId);
         lastTime = performance.now();
@@ -1202,6 +1641,9 @@
         s.stats.runs += 1;
         s.stats.totalScore += score;
         s.hintRuns = Math.min((s.hintRuns | 0) + 1, 99);
+        /* Per-run telemetry feeds the mission progress (Hard / Mini missions). */
+        s.runModes[currentMode] = (s.runModes[currentMode] || 0) + 1;
+        s.runSizes[currentWaveSize] = (s.runSizes[currentWaveSize] || 0) + 1;
         if (score > 0) {
           s.pastScores.unshift(score);
           if (s.pastScores.length > 100) s.pastScores.length = 100;
@@ -1211,6 +1653,13 @@
         updateMenuBest();
         if (wasBest) WD.sfx('best');
         WD.checkIconMilestones(score);
+        /* Waver Pass: XP + level rewards, then mission progress. */
+        if (WD.grantRunXp && WD.bumpMissions) {
+          try {
+            WD.lastRunSummary = WD.grantRunXp(score, wasBest);
+            WD.bumpMissions('run', { score: score, wasBest: wasBest });
+          } catch (e) { WD.toast && WD.toast('Season sync skipped', 'bad'); }
+        }
 
         setTimeout(function () { if (isPlaying && isDead) showGameOver(score, wasBest); }, 750);
 
@@ -1275,8 +1724,13 @@
         player.y = canvas.height / 2;
         player.angle = Math.PI / 2;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        updateMenuBest();
+        /* Back on home: hide the in-run HUD and the stage banner. */
+        if (hudScore) hudScore.classList.add('hidden');
         bestDisplay.classList.add('hidden');
+        if (stageLabel) stageLabel.classList.add('hidden');
+        lastStage = 0;
+        if (flashStage._timer) { clearTimeout(flashStage._timer); flashStage._timer = null; }
+        updateMenuBest();
 
         bgMusic.pause();
         try { bgMusic.currentTime = 0; } catch (e) {}
@@ -1356,12 +1810,12 @@
 
       /* Game Options: difficulty + wave size (wired here; setMode guards runs) */
       ['easy', 'medium', 'hard'].forEach(function (m) {
-        var b = $id('mode-' + m);
+        var b = document.getElementById('mode-' + m);
         if (b) b.addEventListener('click', function () { WD.sfx('click'); setMode(m); });
       });
-      ['normal', 'mini'].forEach(function (s) {
-        var b = $id('size-' + s);
-        if (b) b.addEventListener('click', function () { WD.sfx('click'); setWaveSize(s); });
+      ['normal', 'mini'].forEach(function (sz) {
+        var b = document.getElementById('size-' + sz);
+        if (b) b.addEventListener('click', function () { WD.sfx('click'); setWaveSize(sz); });
       });
       startBtn.addEventListener('click', function () {
         if (!isPlaying) initGame(1);
@@ -1521,7 +1975,7 @@
         ctx.lineCap = 'round';
         for (var i = 0; i < sparkles.length; i++) {
           var s = sparkles[i];
-          var tw = Math.sin(frameCount * 0.25 + s.seed) * 0.5 + 0.5;
+          var tw = Math.sin(frameCount * 0.25 + s.seed) * 0.5 + 0.5; /* twinkle pulse */
           var a = Math.max(0, Math.sin(s.life * Math.PI)) * (0.35 + 0.65 * tw);
           var r = s.size * (0.7 + 0.6 * tw);
           ctx.globalAlpha = a;
@@ -1529,14 +1983,17 @@
           ctx.shadowColor = themeColor;
           ctx.shadowBlur = 8;
           ctx.lineWidth = 1.4;
+          /* vertical ray */
           ctx.beginPath();
           ctx.moveTo(s.x, s.y - r * 2.2);
           ctx.lineTo(s.x, s.y + r * 2.2);
           ctx.stroke();
+          /* horizontal ray */
           ctx.beginPath();
           ctx.moveTo(s.x - r * 2.2, s.y);
           ctx.lineTo(s.x + r * 2.2, s.y);
           ctx.stroke();
+          /* core dot */
           ctx.fillStyle = '#ffffff';
           ctx.beginPath();
           ctx.arc(s.x, s.y, r * 0.55, 0, Math.PI * 2);
@@ -1648,6 +2105,8 @@
 
       /* ---------- Simulation ---------- */
       function update() {
+        /* Level-wise pacing: sync speed/gap/spawn with the current stage. */
+        applyStagePacing();
         var currentWaveSpeed = (currentWaveSize === 'mini' ? WAVE_SPEED * 2.3 : WAVE_SPEED) * gameSpeedMultiplier;
         var activeForwardSpeed = (cheats.speedhack ? FORWARD_SPEED * 1.5 : FORWARD_SPEED) * gameSpeedMultiplier;
 
@@ -1718,8 +2177,6 @@
             var maxTopHeight = canvas.height - OBSTACLE_GAP - minHeight - 60;
             var topHeight = Math.floor(Math.random() * (maxTopHeight - minHeight + 1) + minHeight);
             obstacles.push({ x: canvas.width, topHeight: topHeight, passed: false });
-
-            if (SPAWN_RATE > 45 && frameCount % 500 === 0) SPAWN_RATE -= 2;
           }
         }
 
@@ -1858,7 +2315,7 @@
 
   <script>
     /* =====================================================================
-       Wave Dash 2.0 â€” UI layer
+       Wave Dash 2.0 — UI layer
        Dialogs, icon kit, daily rewards, profile, leaderboard, editor,
        settings persistence, sharing.
        ===================================================================== */
@@ -1870,14 +2327,15 @@
 
       /* ---------------- Dialog infrastructure ---------------- */
       var DIALOGS = [
-        ['btn-open-icon-kit', 'icon-kit-modal', 'btn-close-icon-kit'],
+        ['btn-open-icon-kit', 'icon-kit-modal', 'btn-close-icon-kit', 'renderIconKit'],
         ['btn-open-daily', 'daily-modal', 'btn-close-daily', 'renderDaily'],
+        ['btn-open-pass', 'season-modal', 'btn-close-pass', 'renderPassOpen'],
         ['btn-open-scores', 'scores-modal', 'btn-close-scores', 'renderPastScores'],
         ['btn-open-settings', 'settings-modal', 'btn-close-settings'],
         ['btn-open-credits', 'credits-modal', 'btn-close-credits'],
         ['btn-profile', 'profile-modal', 'btn-close-profile', 'renderProfile'],
         ['btn-open-editor', 'editor-modal', 'btn-close-editor', 'editorOpen'],
-        /* login gate: no open button â€” opened programmatically by the leaderboard check */
+        /* login gate: no open button — opened programmatically by the leaderboard check */
         ['', 'login-modal', 'btn-close-login', 'renderLogin']
       ];
       var HOOKS = null; // filled below, after functions are defined
@@ -2061,6 +2519,7 @@
           if (customLabel) colorSelector.insertBefore(b, customLabel);
           else colorSelector.appendChild(b);
         };
+        /* Renders one exclusive set: unlocked = sparkle swatch, locked = padlocked with hint */
         var renderSet = function (list, kind) {
           list.forEach(function (item) {
             var hex = String(item.c).toLowerCase();
@@ -2150,6 +2609,7 @@
 
       function recolorSelectedIcon(iconName) {
         var source = WD.ICONS[iconName] || WD.ICONS.wave;
+        var homeAvatar = document.getElementById('home-avatar');
         var c1 = /^#[0-9a-fA-F]{6}$/.test(S.colors.c1) ? S.colors.c1 : '#ffffff';
         var c2 = /^#[0-9a-fA-F]{6}$/.test(S.colors.c2) ? S.colors.c2 : '#000000';
         var sourceImage = new Image();
@@ -2176,10 +2636,12 @@
             if (waveSprite) waveSprite.src = out;
             if (iconKitPreview) iconKitPreview.src = out;
             if (profileAvatar) profileAvatar.src = out;
+            if (homeAvatar) homeAvatar.src = out;
           } catch (err) {
             if (waveSprite) waveSprite.src = source;
             if (iconKitPreview) iconKitPreview.src = source;
             if (profileAvatar) profileAvatar.src = source;
+            if (homeAvatar) homeAvatar.src = source;
           }
         };
         sourceImage.src = source;
@@ -2246,10 +2708,14 @@
           return;
         }
         S.icon = iconName;
+        S.iconEquips = (S.iconEquips | 0) + 1;
         WD.persist();
         applyIconSelection(iconName);
         recolorSelectedIcon(iconName);
         WD.sfx('click');
+        /* Icon swaps count toward switch missions. */
+        if (WD.bumpMissions) { try { WD.bumpMissions('icon', {}); } catch (e) {} }
+        if (WD.ui && WD.ui.refreshHome) { try { WD.ui.refreshHome(); } catch (e2) {} }
       }
 
       iconOptions.forEach(function (btn) {
@@ -2397,7 +2863,10 @@
         });
       })();
 
-      /* ---------------- Clerk auth bridge (iframe <-> Next shell) ---------------- */
+      /* ---------------- Clerk auth bridge (iframe <-> Next shell) ----------------
+         The Next shell hosts <ClerkProvider>/<SignIn> and relays the session:
+           game -> shell : { type:'wd-auth-open' }   (open the sign-in modal)
+           shell -> game : { type:'wd-auth-user', user:{id,name}|null } */
       var shellAuthSeen = false;
       var shellAuthPending = null;
       function postToShell(msg) {
@@ -2456,7 +2925,7 @@
         if (!S.pastScores.length) {
           var empty = document.createElement('p');
           empty.className = 'text-neutral-500';
-          empty.textContent = 'No scores yet â€” play a run!';
+          empty.textContent = 'No scores yet — play a run!';
           list.appendChild(empty);
           return;
         }
@@ -2545,7 +3014,7 @@
           claimBtn.disabled = claimed;
           claimBtn.classList.toggle('opacity-50', claimed);
           claimBtn.classList.toggle('pointer-events-none', claimed);
-          claimBtn.textContent = claimed ? 'Claimed â€” come back tomorrow!' : 'Claim todayâ€™s gift';
+          claimBtn.textContent = claimed ? 'Claimed — come back tomorrow!' : 'Claim today’s gift';
         }
         if (dailyNote) dailyNote.textContent = isClaimedToday()
           ? 'Gift claimed today. Your streak keeps growing — day 7 grants the exclusive Aurora Star glitter!'
@@ -2645,8 +3114,347 @@
           renderEarnedColors();
           refreshIconLocks();
           renderDaily();
+          /* The daily claim also feeds the Daily mission + streak chips. */
+          if (WD.bumpMissions) { try { WD.bumpMissions('daily', {}); } catch (e) {} }
+          if (WD.ui && WD.ui.refreshHome) { try { WD.ui.refreshHome(); } catch (e2) {} }
         });
       }
+
+      /* ---------------- Waver Pass — season + missions UI ---------------- */
+      var passDot = $id('pass-dot');
+      var passTabSeason = $id('pass-tab-season');
+      var passTabMissions = $id('pass-tab-missions');
+      var passSeasonPanel = $id('pass-season-panel');
+      var passMissionsPanel = $id('pass-missions-panel');
+      var passCurLevel = 1;
+      var passRewardFocus = 0;
+
+      function missionDef(id) {
+        for (var i = 0; i < WD.MISSION_POOL.length; i++) {
+          if (WD.MISSION_POOL[i].id === id) return WD.MISSION_POOL[i];
+        }
+        return null;
+      }
+
+      /* Amber dot on the Pass button while a finished mission waits to be claimed. */
+      function refreshMissionDots() {
+        var ready = false;
+        try {
+          WD.ensureMissions();
+          ready = S.missions.slots.some(function (slot) {
+            var def = missionDef(slot.id);
+            return !!def && (slot.prog | 0) >= def.goal;
+          });
+        } catch (e) { ready = false; }
+        if (passDot) passDot.classList.toggle('hidden', !ready);
+      }
+
+      /* Home chips: level, XP bar, name, daily streak, pass value, dots. */
+      function refreshHome() {
+        var li = WD.levelInfo(S.xp);
+        var chip = $id('home-level-chip');
+        if (chip) chip.textContent = 'LV ' + li.level;
+        var bar = $id('home-level-bar');
+        if (bar) bar.style.width = Math.round(li.pct * 100) + '%';
+        var name = $id('player-name-label');
+        if (name) name.textContent = S.name || 'Player 1';
+        var streak = $id('home-streak-value');
+        if (streak) streak.textContent = String(S.daily.streak || 0);
+        var passVal = $id('home-pass-value');
+        if (passVal) passVal.textContent = 'LV ' + li.level;
+        refreshMissionDots();
+        refreshDailyDot();
+      }
+
+      /* Total banked XP required to reach a level (for the "XP to go" hint). */
+      function totalXpForLevel(level) {
+        var t = 0;
+        for (var i = 1; i < level; i++) t += WD.xpForNext(i);
+        return t;
+      }
+
+      /* ----- Season panel ----- */
+      function renderSeason() {
+        var li = WD.levelInfo(S.xp);
+        passCurLevel = li.level;
+        var big = $id('pass-level-big');
+        if (big) big.textContent = String(li.level);
+        var sub = $id('pass-xp-sub');
+        if (sub) sub.textContent = li.maxed ? 'MAX level — every color unlocked' : li.into + ' / ' + li.need + ' XP';
+        var total = $id('pass-xp-total');
+        if (total) total.textContent = 'total ' + li.xp + ' XP';
+        var bar = $id('pass-xp-bar');
+        if (bar) bar.style.width = Math.round(li.pct * 100) + '%';
+        renderRewardStrip();
+        renderRewardDetail(passRewardFocus || li.level);
+      }
+
+      /* Horizontal strip of season levels around the current one. */
+      function renderRewardStrip() {
+        var strip = $id('pass-reward-strip');
+        if (!strip) return;
+        strip.innerHTML = '';
+        var maxed = WD.PASS_MAX_LEVEL;
+        var start = Math.max(1, Math.min(passCurLevel - 2, maxed - 8));
+        var end = Math.min(maxed, start + 8);
+        for (var lv = start; lv <= end; lv++) {
+          var r = WD.passReward(lv);
+          if (!r) break;
+          var unlocked = lv <= passCurLevel;
+          var focus = lv === (passRewardFocus || passCurLevel);
+          var glit = WD.isGlitterHex(r.c);
+          var cell = document.createElement('button');
+          cell.type = 'button';
+          cell.className = 'shrink-0 flex flex-col items-center gap-1.5 px-2 py-2 rounded-xl border transition-all cursor-pointer ' +
+            (focus ? 'border-white/60 bg-neutral-800/90' : 'border-transparent hover:bg-neutral-900/70');
+          var sw = document.createElement('span');
+          sw.className = 'w-10 h-10 rounded-full border-2 flex items-center justify-center ' +
+            (unlocked ? 'border-white/40' + (glit ? ' wd-glitter' : '') : 'border-neutral-800 text-neutral-700 opacity-60');
+          sw.style.background = unlocked ? r.c : 'transparent';
+          if (unlocked) {
+            sw.style.boxShadow = '0 0 14px -3px ' + r.c;
+          } else {
+            sw.innerHTML = LOCK_BADGE_SVG;
+          }
+          cell.appendChild(sw);
+          var lbl = document.createElement('span');
+          lbl.className = 'text-[9px] font-bold tabular-nums ' + (unlocked ? 'text-neutral-300' : 'text-neutral-500');
+          lbl.textContent = 'Lv ' + lv;
+          cell.appendChild(lbl);
+          var captured = lv;
+          cell.addEventListener('click', function (e) {
+            e.stopPropagation();
+            passRewardFocus = captured;
+            renderRewardStrip();
+            renderRewardDetail(captured);
+            WD.sfx('click');
+          });
+          strip.appendChild(cell);
+        }
+      }
+
+      function renderRewardDetail(lv) {
+        var box = $id('pass-reward-detail');
+        if (!box) return;
+        var r = WD.passReward(lv);
+        if (!r) { box.textContent = ''; return; }
+        var unlocked = lv <= passCurLevel;
+        var glit = WD.isGlitterHex(r.c);
+        var head = '<span class="text-neutral-500 font-semibold tabular-nums mr-2">Lv ' + lv + '</span>' +
+          '<span class="inline-block w-3.5 h-3.5 rounded-full border border-white/30 align-middle mr-1.5' + (unlocked && glit ? ' wd-glitter' : '') + '" style="background:' + (unlocked ? r.c : 'transparent') + '"></span>';
+        if (unlocked) {
+          box.innerHTML = head +
+            '<span class="font-semibold text-white">' + r.n + '</span>' +
+            '<span class="text-neutral-500"> · unlocked</span>' +
+            '<span class="text-neutral-600"> — pick it in Earned Colors (Customize)</span>';
+        } else {
+          var left = Math.max(0, totalXpForLevel(lv) - (S.xp | 0));
+          box.innerHTML = head +
+            '<span class="font-semibold text-white">' + r.n + (glit ? ' ✦' : '') + '</span>' +
+            '<span class="text-neutral-500"> · locked</span>' +
+            '<span class="text-neutral-400 tabular-nums"> · ' + left + ' XP to go</span>';
+        }
+      }
+
+      /* ----- Missions panel (also reused on the game-over screen) ----- */
+      function renderMissionsInto(list, opts) {
+        opts = opts || {};
+        if (!list) return;
+        WD.ensureMissions();
+        list.innerHTML = '';
+        var entries = [];
+        S.missions.slots.forEach(function (slot) {
+          var def = missionDef(slot.id);
+          if (def) entries.push({ slot: slot, def: def });
+        });
+        if (opts.maxRows) entries = entries.slice(0, opts.maxRows);
+        if (!entries.length) {
+          var none = document.createElement('p');
+          none.className = opts.compact ? 'text-[10px] text-neutral-500 text-left' : 'text-[11px] text-neutral-500 text-left';
+          none.textContent = 'Fresh missions land here — play a run to roll them in.';
+          list.appendChild(none);
+          return 0;
+        }
+        entries.forEach(function (entry) {
+          var slot = entry.slot;
+          var def = entry.def;
+          var prog = Math.max(0, Math.min(slot.prog | 0, def.goal));
+          var done = prog >= def.goal;
+          var row = document.createElement('div');
+          row.className = 'flex items-center gap-3 rounded-xl border text-left ' +
+            (opts.compact ? 'px-2.5 py-2' : 'px-3 py-2.5') + ' ' +
+            (done ? 'border-amber-400/50 bg-amber-400/10' : 'border-neutral-800 bg-neutral-900/60');
+          var mid = document.createElement('div');
+          mid.className = 'flex-1 min-w-0';
+          var title = document.createElement('p');
+          title.className = 'font-medium text-white truncate ' + (opts.compact ? 'text-[11px] sm:text-xs' : 'text-xs sm:text-sm');
+          title.textContent = def.text.replace('{g}', def.goal);
+          mid.appendChild(title);
+          var counts = document.createElement('p');
+          counts.className = 'font-semibold tabular-nums ' +
+            (opts.compact ? 'text-[10px]' : 'text-[10px] sm:text-[11px] mb-1') + ' ' +
+            (done ? 'text-amber-200' : 'text-neutral-500');
+          counts.textContent = prog + ' / ' + def.goal + (done ? ' — ready to claim!' : '');
+          mid.appendChild(counts);
+          if (!opts.compact) {
+            var barWrap = document.createElement('div');
+            barWrap.className = 'h-1.5 w-full rounded-full bg-neutral-800 overflow-hidden';
+            var bar = document.createElement('div');
+            bar.className = 'h-full rounded-full ' + (done ? 'bg-amber-300' : 'bg-neutral-400');
+            bar.style.width = Math.round((prog / def.goal) * 100) + '%';
+            barWrap.appendChild(bar);
+            mid.appendChild(barWrap);
+          }
+          row.appendChild(mid);
+          var right = document.createElement('div');
+          right.className = 'shrink-0 flex items-center gap-2';
+          var xpChip = document.createElement('span');
+          xpChip.className = 'font-bold tabular-nums px-2 py-0.5 rounded-full ' +
+            (opts.compact ? 'text-[9px]' : 'text-[10px]') + ' ' +
+            (done ? 'bg-amber-300/20 text-amber-200' : 'bg-neutral-800 text-neutral-400');
+          xpChip.textContent = '+' + def.xp + ' XP';
+          right.appendChild(xpChip);
+          if (done && opts.allowClaim !== false) {
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'wd-focusable px-3 py-1 rounded-full bg-amber-300 text-neutral-950 font-bold hover:bg-amber-200 active:scale-95 transition-all cursor-pointer ' +
+              (opts.compact ? 'text-[10px]' : 'text-[10px] sm:text-xs');
+            btn.textContent = 'Claim';
+            btn.addEventListener('click', function (ev) {
+              ev.stopPropagation();
+              var got = WD.claimMission(slot.id);
+              if (got > 0) WD.toast('+' + got + ' XP banked — Waver Pass!', 'good');
+              refreshMissionDots();
+              renderMissionsInto(list, opts);
+              refreshHome();
+              if (opts.refreshSummary) { try { renderRunSummary(); } catch (e3) {} }
+            });
+            right.appendChild(btn);
+          }
+          row.appendChild(right);
+          list.appendChild(row);
+        });
+        return entries.length;
+      }
+
+      function renderPassMissions() {
+        renderMissionsInto($id('pass-missions-list'), {});
+        refreshMissionDots();
+      }
+
+      var TAB_ACTIVE = 'wd-focusable px-4 sm:px-5 py-1.5 rounded-full text-xs sm:text-sm font-semibold transition-colors cursor-pointer bg-white text-neutral-950';
+      var TAB_IDLE = 'wd-focusable px-4 sm:px-5 py-1.5 rounded-full text-xs sm:text-sm font-semibold transition-colors cursor-pointer text-neutral-400 hover:text-white';
+      function showPassTab(which) {
+        var season = which !== 'missions';
+        if (passTabSeason) passTabSeason.className = season ? TAB_ACTIVE : TAB_IDLE;
+        if (passTabMissions) passTabMissions.className = season ? TAB_IDLE : TAB_ACTIVE;
+        if (passSeasonPanel) {
+          if (season) passSeasonPanel.classList.remove('hidden');
+          else passSeasonPanel.classList.add('hidden');
+        }
+        if (passMissionsPanel) {
+          if (season) { passMissionsPanel.classList.add('hidden'); passMissionsPanel.classList.remove('flex'); }
+          else { passMissionsPanel.classList.remove('hidden'); passMissionsPanel.classList.add('flex'); }
+        }
+      }
+      if (passTabSeason) passTabSeason.addEventListener('click', function (e) { e.stopPropagation(); showPassTab('season'); WD.sfx('click'); });
+      if (passTabMissions) passTabMissions.addEventListener('click', function (e) {
+        e.stopPropagation();
+        showPassTab('missions');
+        renderPassMissions();
+        WD.sfx('click');
+      });
+
+      function renderPassOpen() {
+        passRewardFocus = 0;
+        showPassTab('season');
+        renderSeason();
+        renderPassMissions();
+        if (window.lucide) { try { lucide.createIcons(); } catch (e) {} }
+      }
+
+      /* ----- Run summary (game-over screen) ----- */
+      function animateXpBar(bar, from, to) {
+        if (!bar) return;
+        var a = Math.max(0, Math.min(1, from || 0));
+        var b = Math.max(0, Math.min(1, to || 0));
+        bar.style.transitionDuration = '0ms';
+        bar.style.width = Math.round(a * 100) + '%';
+        requestAnimationFrame(function () {
+          requestAnimationFrame(function () {
+            bar.style.transitionDuration = '700ms';
+            bar.style.width = Math.round(b * 100) + '%';
+          });
+        });
+      }
+
+      function renderRunSummary() {
+        var sum = WD.lastRunSummary || null;
+        var li = WD.levelInfo(S.xp);
+        var lvlEl = $id('go-xp-level');
+        if (lvlEl) lvlEl.textContent = String(li.level);
+        var gainEl = $id('go-xp-gain');
+        if (gainEl) gainEl.textContent = '+' + ((sum && sum.gain) || 0) + ' XP';
+        var sub = $id('go-xp-sub');
+        if (sub) {
+          sub.textContent = li.maxed
+            ? 'MAX level — every season trail color is yours'
+            : li.into + ' / ' + li.need + ' XP to Level ' + (li.level + 1);
+        }
+        var from = sum ? (sum.levelsGained > 0 ? 0 : sum.before.pct) : li.pct;
+        animateXpBar($id('go-xp-bar'), from, li.pct);
+
+        var banner = $id('go-levelup');
+        if (banner) {
+          var leveled = !!(sum && sum.levelsGained > 0);
+          banner.classList.toggle('hidden', !leveled);
+          banner.classList.toggle('flex', leveled);
+          if (leveled) {
+            var txt = $id('go-levelup-text');
+            if (txt) txt.textContent = 'Level ' + sum.after.level + ' reached!';
+            var first = (sum.rewards && sum.rewards.length) ? sum.rewards[sum.rewards.length - 1] : null;
+            var rew = $id('go-levelup-reward');
+            if (rew) {
+              rew.classList.toggle('hidden', !first);
+              rew.classList.toggle('flex', !!first);
+            }
+            if (first) {
+              var sw = $id('go-levelup-swatch');
+              if (sw) {
+                sw.style.background = first.color.c;
+                sw.classList.toggle('wd-glitter', !!WD.isGlitterHex(first.color.c));
+              }
+              var nm = $id('go-levelup-color-name');
+              if (nm) nm.textContent = first.color.n + ' trail unlocked';
+            }
+          }
+        }
+        var rows = renderMissionsInto($id('go-missions'), { compact: true, refreshSummary: true });
+        var empty = $id('go-missions-empty');
+        if (empty) empty.classList.toggle('hidden', rows > 0);
+        if (!rows) {
+          var list = $id('go-missions');
+          if (list) list.innerHTML = '';
+        }
+        if (window.lucide) { try { lucide.createIcons(); } catch (e) {} }
+      }
+
+      /* Live-sync home chips + open pass modal with pass updates. */
+      window.addEventListener('wd-pass-changed', function () {
+        if (WD.ui && WD.ui.refreshHome) { try { WD.ui.refreshHome(); } catch (e) {} }
+        var modal = $id('season-modal');
+        if (modal && !modal.classList.contains('hidden')) {
+          renderSeason();
+          renderPassMissions();
+        }
+      });
+      window.addEventListener('wd-colors-changed', function () {
+        if (WD.ui && WD.ui.refreshHome) { try { WD.ui.refreshHome(); } catch (e) {} }
+      });
+
+      WD.ui.refreshHome = refreshHome;
+      WD.ui.renderRunSummary = renderRunSummary;
+      WD.ui.renderPass = renderPassOpen;
 
       /* ---------------- Pattern editor ---------------- */
       var E_ROWS = 10;
@@ -2815,7 +3623,7 @@
         if (!S.patterns.length) {
           var hint = document.createElement('span');
           hint.className = 'text-xs text-neutral-500';
-          hint.textContent = 'No saved patterns yet â€” hit Save to keep one.';
+          hint.textContent = 'No saved patterns yet — hit Save to keep one.';
           wrap.appendChild(hint);
           return;
         }
@@ -2839,7 +3647,7 @@
           var delBtn = document.createElement('button');
           delBtn.className = 'w-5 h-5 flex items-center justify-center rounded text-neutral-500 hover:text-red-300 transition-colors cursor-pointer';
           delBtn.setAttribute('aria-label', 'Delete ' + p.name);
-          delBtn.textContent = 'Ã—';
+          delBtn.textContent = '×';
           delBtn.addEventListener('click', function () {
             S.patterns.splice(idx, 1);
             WD.persist();
@@ -2857,7 +3665,7 @@
         $id('editor-save').addEventListener('click', function () {
           var snap = depths.map(function (n) { return WD.clamp(n | 0, 0, E_ROWS - 1); });
           if (!snap.some(function (n) { return n > 0; })) { WD.toast('Pattern is empty', 'bad'); return; }
-          if (S.patterns.length >= 6) { WD.toast('Save slots full â€” delete one first', 'bad'); return; }
+          if (S.patterns.length >= 6) { WD.toast('Save slots full — delete one first', 'bad'); return; }
           var name = editorPatternName || 'Pattern ' + (S.patterns.length + 1);
           if (editorLoadedIdx !== -1 && editorLoadedIdx < S.patterns.length) {
             S.patterns[editorLoadedIdx] = { name: name, cols: snap };
@@ -2895,6 +3703,7 @@
       /*.on-open hooks for dialogs (defined here so hoisting order is safe) */
       HOOKS = {
         renderDaily: renderDaily,
+        renderPassOpen: renderPassOpen,
         renderPastScores: renderPastScores,
         renderBoard: renderBoard,
         renderLogin: renderLogin,
@@ -2905,7 +3714,7 @@
 
       /* ---------------- Sharing ---------------- */
       function shareText() {
-        return 'I scored ' + S.best + ' points on Wave Dash ðŸŒŠ â€” can you beat me?';
+        return 'I scored ' + S.best + ' points on Wave Dash 🌊 — can you beat me?';
       }
       var shareXBtn = $id('btn-share-x');
       if (shareXBtn) {
@@ -2920,7 +3729,7 @@
         var text = location.href || 'https://wave-dash.app';
         if (navigator.clipboard && navigator.clipboard.writeText) {
           navigator.clipboard.writeText(text).then(function () {
-            WD.toast('Link copied â€” paste it anywhere!', 'good');
+            WD.toast('Link copied — paste it anywhere!', 'good');
           }).catch(function () {
             WD.toast(text, 'good');
           });
@@ -2939,7 +3748,7 @@
         });
       }
 
-      /* ---------------- Autoplay bot reveal (Ctrl Ã— 3) ---------------- */
+      /* ---------------- Autoplay bot reveal (Ctrl × 3) ---------------- */
       var autoplayRow = $id('autoplay-row');
       var autoplayToggle = $id('toggle-autoplay-pause');
       var ctrlPresses = 0;
@@ -2956,6 +3765,7 @@
       if (autoplayToggle) {
         autoplayToggle.addEventListener('change', function (e) {
           WD.engine.bot.enabled = e.target.checked;
+          if (!e.target.checked && WD.engine.clearBotAutoRetry) WD.engine.clearBotAutoRetry();
           ctrlPresses = 0;
           lastCtrlTime = 0;
           if (autoplayRow && !e.target.checked) autoplayRow.style.display = 'none';
@@ -2984,6 +3794,7 @@
       refreshThemeSelection();
       refreshDailyDot();
       WD.engine.updateMenuBest();
+      if (WD.ui.refreshHome) WD.ui.refreshHome();
       syncMusicIcon();
 
       window.addEventListener('DOMContentLoaded', function () {

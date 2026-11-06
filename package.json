@@ -1,6 +1,6 @@
 {
   "name": "wave-dash-clone",
-  "version": "2.2.0",
+  "version": "3.0.0",
   "private": true,
   "description": "Wave Dash — production-ready one-button canvas wave game (Next.js 16 shell + self-contained game)",
   "license": "MIT",

@@ -280,6 +280,7 @@ if (!browserExe) {
       const dialogCases = [
         ["icon-kit", "btn-open-icon-kit", "icon-kit-modal"],
         ["daily", "btn-open-daily", "daily-modal"],
+        ["pass", "btn-open-pass", "season-modal"],
         ["scores", "btn-open-scores", "scores-modal"],
         ["credits", "btn-open-credits", "credits-modal"],
         ["settings", "btn-open-settings", "settings-modal"],
@@ -360,6 +361,88 @@ if (!browserExe) {
       const restored = await E(`(function(){ var s = JSON.parse(localStorage.getItem('wd.save.v2')); return s.mode + '/' + s.waveSize; })()`);
       ok("options restored to defaults", restored === "medium/normal", restored);
 
+      // --- Waver Pass v3: season levels, rotating missions, XP grants, home chips ---
+      phase("waver pass season v3");
+      const passApi = await E(`(function(){
+        return {
+          passReward: typeof WD.passReward === 'function',
+          levelInfo: typeof WD.levelInfo === 'function',
+          xpForNext: typeof WD.xpForNext === 'function',
+          grantRunXp: typeof WD.grantRunXp === 'function',
+          bumpMissions: typeof WD.bumpMissions === 'function',
+          claimMission: typeof WD.claimMission === 'function',
+          ensureMissions: typeof WD.ensureMissions === 'function',
+          refreshHome: typeof WD.ui.refreshHome === 'function',
+          trigger: !!document.getElementById('btn-open-pass'),
+          dot: !!document.getElementById('pass-dot'),
+          stageBanner: !!document.getElementById('stage-label')
+        };
+      })()`);
+      const passApiOk = Object.keys(passApi).every(k => passApi[k] === true);
+      ok("Waver Pass API + home triggers wired", passApiOk, JSON.stringify(passApi));
+
+      await E(`document.getElementById('btn-open-pass').click()`);
+      await sleep(300);
+      const seasonOpen = await dialogVisible("season-modal");
+      const seasonContent = await E(`(function(){
+        var big = document.getElementById('pass-level-big');
+        var strip = document.getElementById('pass-reward-strip');
+        return { level: big ? big.textContent : null,
+                 cells: strip ? strip.querySelectorAll('button').length : 0,
+                 bar: document.getElementById('pass-xp-bar').style.width };
+      })()`);
+      ok("season panel renders level + reward strip", !!seasonOpen
+          && /^[0-9]+$/.test(seasonContent.level || '') && seasonContent.cells >= 5,
+        `open=${seasonOpen} level=${seasonContent.level} cells=${seasonContent.cells} bar=${seasonContent.bar}`);
+
+      await E(`document.getElementById('pass-tab-missions').click()`);
+      await sleep(250);
+      const missionsRows = await E(`document.getElementById('pass-missions-list').childElementCount`);
+      ok("missions tab renders 3 rotating missions", missionsRows === 3, `rows=${missionsRows}`);
+      await send("Input.dispatchKeyEvent", { type: "keyDown", key: "Escape", code: "Escape", windowsVirtualKeyCode: 27 });
+      await sleep(220);
+
+      /* Deterministic: force stats so active missions finish, claim one, expect
+         XP banked + a replacement mission rolls in (3 slots stay filled). */
+      const xpBeforeMission = await E(`JSON.parse(localStorage.getItem('wd.save.v2')).xp`);
+      const missionClaim = await E(`(function(){
+        WD.ensureMissions();
+        var s = WD.store;
+        s.stats.runs = 50; s.stats.totalScore = 9999; s.best = 99;
+        s.runModes.hard = 5; s.runSizes.mini = 5;
+        WD.persist(); WD.bumpMissions('run');
+        var defs = WD.MISSION_POOL;
+        var defFor = function (id) { return defs.filter(function (d) { return d.id === id; })[0] || null; };
+        var arr = s.missions.slots.slice();
+        var ready = 0;
+        var target = null;
+        for (var j = 0; j < arr.length; j++) {
+          var d = defFor(arr[j].id);
+          if (d && arr[j].prog >= d.goal) { ready++; if (!target) target = arr[j]; }
+        }
+        var claimed = 0;
+        if (target) claimed = WD.claimMission(target.id) || 0;
+        return { ready: ready, claimed: claimed, slots: s.missions.slots.length, xp: s.xp };
+      })()`);
+      await sleep(300);
+      const xpAfterMission = await E(`JSON.parse(localStorage.getItem('wd.save.v2')).xp`);
+      ok("mission claim grants XP + rolls replacement", missionClaim.ready >= 1 && missionClaim.claimed > 0
+          && missionClaim.slots === 3 && xpAfterMission > xpBeforeMission,
+        JSON.stringify(missionClaim) + ` xp ${xpBeforeMission} -> ${xpAfterMission}`);
+
+      /* grantRunXp is deterministic: a score-7 run banks +7 XP (+50% only on bests). */
+      const xpBeforeGrant = xpAfterMission;
+      const grantRes = await E(`(function(){ WD.grantRunXp(7, false); return WD.store.xp; })()`);
+      ok("grantRunXp banks run XP deterministically", grantRes === xpBeforeGrant + 7, `${xpBeforeGrant} -> ${grantRes}`);
+
+      const chipTxt = await E(`(function(){ WD.ui.refreshHome(); return {
+        chip: document.getElementById('home-level-chip').textContent,
+        pass: document.getElementById('home-pass-value').textContent,
+        bar: document.getElementById('home-level-bar').style.width }; })()`);
+      ok("home chips show Waver Pass level", typeof chipTxt.chip === 'string' && chipTxt.chip.indexOf('LV ') === 0
+          && chipTxt.pass === chipTxt.chip && chipTxt.bar.indexOf('%') > 0,
+        JSON.stringify(chipTxt));
+
       // --- autoplay bot: no on-screen label; reveal + engine flag still work ---
       phase("autoplay bot");
       const noBadge = await E(`document.getElementById('bot-badge') === null`);
@@ -405,6 +488,16 @@ if (!browserExe) {
         }
         ok("game-over overlay visible", overlayShown, String(overlayShown));
         await shot("03-gameover.png");
+        const goXp = await E(`(function(){
+          var bar = document.getElementById('go-xp-bar');
+          var lvl = document.getElementById('go-xp-level');
+          var miss = document.getElementById('go-missions');
+          return { bar: bar ? bar.style.width : null, level: lvl ? lvl.textContent : null,
+                   missions: miss ? miss.childElementCount : -1 };
+        })()`);
+        ok("game-over run summary renders level + missions", /^\d+%$/.test(goXp.bar || '')
+            && /^[0-9]+$/.test(goXp.level || '') && goXp.missions >= 0,
+          JSON.stringify(goXp));
         await send("Input.dispatchKeyEvent", { type: "keyDown", key: "Escape", code: "Escape", windowsVirtualKeyCode: 27 });
         await sleep(300);
         const back = await E(`WD.engine.isPlaying() === false
@@ -456,6 +549,9 @@ if (!browserExe) {
       const save3 = await E(`JSON.parse(localStorage.getItem('wd.save.v2'))`);
       ok("save survives reload", !!save3 && save3.version === 2 && save3.attempts >= (save1?.attempts ?? 0),
           `attempts=${save3?.attempts}`);
+      ok("v3 save fields backfilled", !!save3 && typeof save3.xp === 'number' && !!save3.missions
+          && Array.isArray(save3.missions.slots) && Array.isArray(save3.missions.used),
+          `xp=${save3?.xp} slots=${(save3?.missions?.slots || []).length} completed=${save3?.missions?.completed}`);
 
       // --- mobile layout: 390x844 viewport, nothing overflows, everything fits ---
       phase("mobile layout (390x844)");
@@ -470,7 +566,8 @@ if (!browserExe) {
           var b = el.getBoundingClientRect(); return { left: b.left, right: b.right, width: b.width, top: b.top, bottom: b.bottom }; }
         return JSON.stringify({
           w: w,
-          center: r('center-row'),
+          center: r('start-btn'),
+          mode: r('mode-selector'),
           quick: r('quick-actions'),
           title: r('title'),
           scrollW: document.documentElement.scrollWidth,
@@ -479,12 +576,18 @@ if (!browserExe) {
       })()`));
       ok("center buttons fit phone width", mob.center && mob.center.left >= -2 && mob.center.right <= mob.w + 2,
         `left=${mob.center?.left?.toFixed?.(1)} right=${mob.center?.right?.toFixed?.(1)} w=${mob.w}`);
+      ok("game options grid fits phone width", mob.mode && mob.mode.left >= -2 && mob.mode.right <= mob.w + 2,
+        `left=${mob.mode?.left?.toFixed?.(1)} right=${mob.mode?.right?.toFixed?.(1)}`);
       ok("bottom actions fit phone width", mob.quick && mob.quick.left >= -2 && mob.quick.right <= mob.w + 2,
         `left=${mob.quick?.left?.toFixed?.(1)} right=${mob.quick?.right?.toFixed?.(1)}`);
       ok("title fits phone width", mob.title && mob.title.left >= -2 && mob.title.right <= mob.w + 2,
         `left=${mob.title?.left?.toFixed?.(1)} right=${mob.title?.right?.toFixed?.(1)}`);
       ok("no horizontal overflow on phone", mob.scrollW <= mob.w + 2, `scrollW=${mob.scrollW} w=${mob.w}`);
       await shot("08-mobile-menu-390.png");
+      // HUD is menu-hidden (in-run only) even on phones:
+      const hudHiddenMenuM = await E(`document.getElementById('hud-score').classList.contains('hidden')
+        && document.getElementById('best-display').classList.contains('hidden')`);
+      ok("HUD hidden on mobile menu", !!hudHiddenMenuM);
       // gameplay HUD placement while playing at phone size
       await send("Input.dispatchKeyEvent", { type: "keyDown", key: " ", code: "Space", windowsVirtualKeyCode: 32 });
       await sleep(250);
@@ -501,6 +604,8 @@ if (!browserExe) {
         `score.left=${hud.score?.left?.toFixed?.(1)} score.right=${hud.score?.right?.toFixed?.(1)} pause.left=${hud.pause?.left?.toFixed?.(1)}`
       );
       await shot("09-mobile-run-390.png");
+      const hudShownRunM = await E(`!document.getElementById('hud-score').classList.contains('hidden')`);
+      ok("HUD visible during mobile run", !!hudShownRunM);
       await send("Input.dispatchKeyEvent", { type: "keyDown", key: "Escape", code: "Escape", windowsVirtualKeyCode: 27 });
       await sleep(150);
       await send("Input.dispatchKeyEvent", { type: "keyUp", key: "Escape", code: "Escape", windowsVirtualKeyCode: 27 });
